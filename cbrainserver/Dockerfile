@@ -7,6 +7,7 @@ COPY . /carmin
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 ENV SERVER_PORT 80
+ENV COVERALLS_REPO_TOKEN ljhyghrf22rJ9bWfiDT3jVr7E85ruP7i0
 
 EXPOSE $SERVER_PORT
 
