@@ -1,6 +1,7 @@
 # CARMIN
 
 [![Build Status](https://travis-ci.org/louis-ver/CARMIN.svg?branch=develop)](https://travis-ci.org/louis-ver/CARMIN)
+
 A common web API for remote pipeline execution:
 
 * [Specification and documentation](https://docs.google.com/document/d/1qVSDLWs8cLJ59sIQI1Av5EA5_yrSAWSqRDywwlu-pmI/edit?usp=sharing)
