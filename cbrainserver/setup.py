@@ -28,7 +28,10 @@ setup(name="carmin-server",
       packages=["carmin_cbrain"],
       include_package_data=True,
       test_suite="pytest",
-      tests_require=["pytest"],
+      tests_require=[
+        "pytest",
+        "coveralls"
+        ],
       setup_requires=DEPS,
       install_requires=DEPS,
       entry_points = {
