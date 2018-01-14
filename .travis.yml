@@ -17,6 +17,7 @@ python:
 
 install:
 - pip install --upgrade setuptools
+- pip install coveralls
 - pip install ./cbrainserver
 
 script:
