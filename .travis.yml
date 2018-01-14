@@ -17,12 +17,12 @@ python:
 
 install:
 - pip install --upgrade setuptools
-- pip install coveralls
+- pip install coveralls pytest pytest-runner
 - pip install ./cbrainserver
 
 script:
 - cd ./cbrainserver
-- coverage run --source carmin_cbrain setup.py test
+- coverage run --source carmin_cbrain setup.py pytest
 
 after_success:
 - coveralls
