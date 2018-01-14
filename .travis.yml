@@ -17,7 +17,7 @@ python:
 
 install:
 - pip install --upgrade setuptools
-- pip install coveralls pytest pytest-runner
+- pip install coveralls pytest-runner
 - pip install ./cbrainserver
 
 script:
