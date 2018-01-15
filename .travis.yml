@@ -21,8 +21,8 @@ install:
 - pip install ./carmin-server/cbrain
 
 script:
-- cd ./cbrainserver
-- coverage run --source carmin_cbrain setup.py pytest
+- cd ./carmin-server/cbrain
+- coverage run --source cbrain setup.py pytest
 
 after_success:
 - coveralls
