@@ -17,8 +17,8 @@ python:
 
 install:
 - pip install --upgrade setuptools
-- pip install coveralls pytest-runner
-- pip install ./cbrainserver
+- pip install coveralls pytest pytest-runner
+- pip install ./carmin-server/cbrain
 
 script:
 - cd ./cbrainserver
