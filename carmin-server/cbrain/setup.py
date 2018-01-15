@@ -25,6 +25,8 @@ setup(name="carmin-server",
                 "Operating System :: OS Independent"
                   ],
       license="MIT",
+      packages=["server"],
+      include_package_data=True,
       test_suite="pytest",
       tests_require=["pytest"],
       setup_requires=DEPS,

@@ -1,27 +1,21 @@
 language: python
 
-sudo: required
-
-services:
-- docker
-
 python:
 - 2.7
 - 3.5
 - 3.5-dev
 - 3.6
 - 3.6-dev
-- 3.7-dev
-- nightly
 - pypy-5.3.1
 
 install:
 - pip install --upgrade setuptools
-- pip install coveralls pytest pytest-runner
+- pip install coveralls pytest pytest-runner pylint
 - pip install ./carmin-server/cbrain
 
 script:
 - cd ./carmin-server/cbrain
+- pylint **/*.py
 - coverage run --source cbrain setup.py pytest
 
 after_success:
