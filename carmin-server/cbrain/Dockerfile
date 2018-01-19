@@ -7,9 +7,7 @@ COPY . /carmin-server/cbrain
 
 RUN pip3 install --no-cache-dir --trusted-host pypi.python.org .
 
-ENV SERVER_PORT 80
-
-EXPOSE $SERVER_PORT
+EXPOSE 8080
 
 ENTRYPOINT ["python3"]
 
