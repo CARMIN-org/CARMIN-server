@@ -15,7 +15,7 @@ install:
 
 script:
 - cd ./carmin-server/cbrain
-- pylint **/*.py
+- pylint **/*.py --errors-only
 - coverage run --source cbrain setup.py pytest
 
 after_success:
