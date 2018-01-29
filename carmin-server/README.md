@@ -5,9 +5,9 @@
 
 ## Installation
 
-To run the server, execute the following command from the root directory:
+To run the server, execute the following command from the `/carmin-server/cbrain` directory:
 ```
-$ pip3 install /carmin-server/cbrain
+$ pip3 install .
 $ python3 -m server
 ```
 
@@ -24,7 +24,7 @@ $ curl http://localhost:8080/platform/
 To run carmin-server in a Docker container, execute the following command, again from the root directory:
 
 ```
-$ docker build -t carmin-server /carmin-server/cbrain
+$ docker build -t carmin-server .
 $ docker run -p 8080:8080 carmin-server
 ```
 
