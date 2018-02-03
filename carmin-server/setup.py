@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 NAME = "carmin-server"
 VERSION = "0.5.4"
-DEPS = ["flask-restful", "flask-sqlalchemy", "marshmallow", "six"]
+DEPS = ["flask-restful", "flask-sqlalchemy", "marshmallow"]
 
 setup(
     name=NAME,
@@ -17,9 +17,7 @@ setup(
     author_email="carmin@googlegroups.com",
     classifiers=[
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",

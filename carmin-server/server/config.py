@@ -1,6 +1,12 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
+SUPPORTED_PROTOCOLS = ["http", "https", "ftp", "sftp", "ftps", "scp", "webdav"]
+
+SUPPORTED_MODULES = [
+    "Processing", "Data", "AdvancedData", "Management", "Commercial"
+]
+
 
 class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
