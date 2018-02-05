@@ -1,12 +1,13 @@
 from functools import wraps
 from flask_restful import request
 from flask import abort
-from ..models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
+from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
+from server.database.models.user import User
 
 _error_code_and_message_schema = ErrorCodeAndMessageSchema()
 
 
-def resource_model(schema):
+def marshal_request(schema):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -30,7 +31,7 @@ def resource_model(schema):
     return decorator
 
 
-def custom_marshal_with(schema):
+def marshal_response(schema):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -57,3 +58,24 @@ def custom_marshal_with(schema):
         return wrapper
 
     return decorator
+
+
+def login_required(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+
+        apiKey = request.headers.get("apiKey")
+        if (apiKey is None):
+            return unauthorized_response("Missing HTTP header field apiKey")
+
+        user = User.query.filter_by(api_key=apiKey).first()
+
+        if not user:
+            return unauthorized_response("Invalid apiKey")
+
+    return wrapper
+
+
+def unauthorized_response(msg: str):
+    return _error_code_and_message_schema.dump(
+        ErrorCodeAndMessage(error_code=401, error_message=msg)).data, 401

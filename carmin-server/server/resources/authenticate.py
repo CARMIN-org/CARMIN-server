@@ -1,19 +1,19 @@
 import random
 import json
 from server import db
-from flask_restful import Resource, fields, marshal_with, request
+from flask_restful import Resource, fields, request
 from flask import make_response, jsonify, abort
 from .models.authentication import Authentication, AuthenticationSchema
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from .models.error_code_and_message import ErrorCodeAndMessage
 from server.database.models.user import User
-from .decorators import resource_model, custom_marshal_with
+from .decorators import marshal_request, marshal_response, login_required
 from server.common.util import generate_api_key
 
 
 class Authenticate(Resource):
-    @resource_model(AuthenticationCredentialsSchema())
-    @custom_marshal_with(AuthenticationSchema())
+    @marshal_request(AuthenticationCredentialsSchema())
+    @marshal_response(AuthenticationSchema())
     def post(self, model):
         user = User.query.filter_by(
             username=model.username, password=model.password).first()
