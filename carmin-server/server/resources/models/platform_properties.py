@@ -63,8 +63,9 @@ class PlatformPropertiesSchema(Schema):
 
     platform_name = fields.Str(
         dump_to='platformName', load_from='platformName')
-    api_error_codes_and_messages = fields.List(
-        fields.Nested(ErrorCodeAndMessageSchema),
+    api_error_codes_and_messages = fields.Nested(
+        ErrorCodeAndMessageSchema,
+        many=True,
         dump_to='APIErrorCodesAndMessage',
         load_from='APIErrorCodesAndMessages')
     supported_transfer_protocols = fields.List(
