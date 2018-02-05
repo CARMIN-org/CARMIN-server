@@ -11,9 +11,8 @@ api = Api(app)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
 
-# from server.database.models.user import User
-# db.create_all()
-# db.session.commit()
+from server.database.models.user import User
+db.create_all()
 
 from server.resources.authenticate import Authenticate
 from server.resources.executions import Executions

@@ -19,6 +19,9 @@ class AuthenticationCredentials():
 
 
 class AuthenticationCredentialsSchema(Schema):
+    class Meta:
+        ordered = True
+
     username = fields.Str(required=True)
     password = fields.Str(required=True)
 

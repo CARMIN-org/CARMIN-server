@@ -15,6 +15,9 @@ class Authentication():
 
 
 class AuthenticationSchema(Schema):
+    class Meta:
+        ordered = True
+
     http_header = fields.Str(
         required=True, dump_to='httpHeader', load_from='httpHeader')
     http_header_value = fields.Str(

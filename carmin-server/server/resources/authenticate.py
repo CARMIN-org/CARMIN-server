@@ -4,11 +4,29 @@ from server import db
 from flask_restful import Resource, fields, marshal_with, request
 from flask import make_response, jsonify, abort
 from .models.authentication import Authentication, AuthenticationSchema
+from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
+from .models.error_code_and_message import ErrorCodeAndMessage
+from server.database.models.user import User
 from .decorators import resource_model, custom_marshal_with
+from server.common.util import generate_api_key
 
 
 class Authenticate(Resource):
-    @resource_model(AuthenticationSchema())
+    @resource_model(AuthenticationCredentialsSchema())
     @custom_marshal_with(AuthenticationSchema())
     def post(self, model):
-        return model
+        user = User.query.filter_by(
+            username=model.username, password=model.password).first()
+
+        if not user:
+            return ErrorCodeAndMessage(
+                error_code=401, error_message="Invalid username/password.")
+
+        if (user.api_key is None):
+            user.api_key = generate_api_key()
+            db.session.add(user)
+            db.session.commit()
+
+        result = Authentication(
+            http_header="apiKey", http_header_value=user.api_key)
+        return result

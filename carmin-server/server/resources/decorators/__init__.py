@@ -1,6 +1,9 @@
 from functools import wraps
 from flask_restful import request
 from flask import abort
+from ..models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
+
+_error_code_and_message_schema = ErrorCodeAndMessageSchema()
 
 
 def resource_model(schema):
@@ -14,7 +17,11 @@ def resource_model(schema):
                 model, errors = schema.load(body)
 
                 if (errors):
-                    return abort(400, errors)
+                    return _error_code_and_message_schema.dump(
+                        ErrorCodeAndMessage(
+                            error_code=400,
+                            error_message="Invalid model provided",
+                            error_detail=errors)).data, 400
 
                 return func(model=model, *args, **kwargs)
 
@@ -29,7 +36,21 @@ def custom_marshal_with(schema):
         def wrapper(*args, **kwargs):
 
             model = func(*args, **kwargs)
+
+            if (isinstance(model, ErrorCodeAndMessage)):
+                json, errors = _error_code_and_message_schema.dump(model)
+                return json, model.error_code
+
             json, errors = schema.dump(model)
+
+            if (errors):
+                error_message = "Server error while dumping model of type %s" % type(
+                    model).__name__
+                return _error_code_and_message_schema.dump(
+                    ErrorCodeAndMessage(
+                        error_code=500,
+                        error_message=error_message,
+                        error_detail=errors)).data, 500
 
             return json
 
