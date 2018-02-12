@@ -45,7 +45,7 @@ api.add_resource(ExecutionKill,
                  '/executions/<string:execution_identifier>/kill')
 api.add_resource(Pipelines, '/pipelines')
 api.add_resource(Pipeline, '/pipelines/<string:pipeline_identifier>')
-api.add_resource(Path, '/path/<string:complete_path>')
+api.add_resource(Path, '/path/<path:complete_path>', '/path/')
 
 
 def main():

@@ -1,10 +1,9 @@
 from functools import wraps
 from flask_restful import request
 from flask import abort
-from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
+from server.resources.models.error_code_and_message import ErrorCodeAndMessage
+from server.common.error_codes_and_messages import ErrorCodeAndMessageMarshaller, INVALID_MODEL_PROVIDED, MODEL_DUMPING_ERROR, MISSING_API_KEY, INVALID_API_KEY
 from server.database.models.user import User
-
-_error_code_and_message_schema = ErrorCodeAndMessageSchema()
 
 
 def marshal_request(schema):
@@ -18,11 +17,10 @@ def marshal_request(schema):
                 model, errors = schema.load(body)
 
                 if (errors):
-                    return _error_code_and_message_schema.dump(
-                        ErrorCodeAndMessage(
-                            error_code=400,
-                            error_message="Invalid model provided",
-                            error_detail=errors)).data, 400
+                    invalid_model_provided_error = INVALID_MODEL_PROVIDED
+                    invalid_model_provided_error.error_detail = errors
+                    return ErrorCodeAndMessageMarshaller(
+                        invalid_model_provided_error), 400
 
                 return func(model=model, *args, **kwargs)
 
@@ -39,19 +37,16 @@ def marshal_response(schema):
             model = func(*args, **kwargs)
 
             if (isinstance(model, ErrorCodeAndMessage)):
-                json, errors = _error_code_and_message_schema.dump(model)
-                return json, model.error_code
+                return ErrorCodeAndMessageMarshaller(model), 400
 
             json, errors = schema.dump(model)
 
             if (errors):
-                error_message = "Server error while dumping model of type %s" % type(
+                model_dumping_error = MODEL_DUMPING_ERROR
+                model_dumping_error.error_message = "Server error while dumping model of type %s" % type(
                     model).__name__
-                return _error_code_and_message_schema.dump(
-                    ErrorCodeAndMessage(
-                        error_code=500,
-                        error_message=error_message,
-                        error_detail=errors)).data, 500
+                model_dumping_error.error_detail = errors
+                return ErrorCodeAndMessageMarshaller(model_dumping_error), 500
 
             return json
 
@@ -66,16 +61,11 @@ def login_required(func):
 
         apiKey = request.headers.get("apiKey")
         if (apiKey is None):
-            return unauthorized_response("Missing HTTP header field apiKey")
+            return ErrorCodeAndMessageMarshaller(MISSING_API_KEY), 401
 
         user = User.query.filter_by(api_key=apiKey).first()
 
         if not user:
-            return unauthorized_response("Invalid apiKey")
+            return ErrorCodeAndMessageMarshaller(INVALID_API_KEY), 401
 
     return wrapper
-
-
-def unauthorized_response(msg: str):
-    return _error_code_and_message_schema.dump(
-        ErrorCodeAndMessage(error_code=401, error_message=msg)).data, 401

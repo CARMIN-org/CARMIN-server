@@ -2,12 +2,11 @@ import pytest
 import os
 from unittest import TestCase
 
-# from server import app, db
-# from server.config import TestConfig
 from server.database.models.user import User
 from server.test.utils import get_test_config, json_request_data, load_json_data
 from server.resources.models.authentication import AuthenticationSchema
 from server.resources.models.error_code_and_message import ErrorCodeAndMessageSchema
+from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD, INVALID_MODEL_PROVIDED
 
 
 class TestDecorator(TestCase):
@@ -85,14 +84,16 @@ class TestDecorator(TestCase):
             }),
             follow_redirects=True)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
 
         schema = ErrorCodeAndMessageSchema()
         ecas, errors = schema.load(load_json_data(response))
 
         self.assertFalse(errors)
-        self.assertEqual(ecas.error_code, 401)
-        self.assertEqual(ecas.error_message, "Invalid username/password.")
+        self.assertEqual(ecas.error_code,
+                         INVALID_USERNAME_OR_PASSWORD.error_code)
+        self.assertEqual(ecas.error_message,
+                         INVALID_USERNAME_OR_PASSWORD.error_message)
 
     def test_invalid_password(self):
         user = User(username="NiceTestUser", password="ImpressiveP±ssw0rd")
@@ -107,14 +108,16 @@ class TestDecorator(TestCase):
             }),
             follow_redirects=True)
 
-        self.assertEqual(response.status_code, 401)
+        self.assertEqual(response.status_code, 400)
 
         schema = ErrorCodeAndMessageSchema()
         ecas, errors = schema.load(load_json_data(response))
 
         self.assertFalse(errors)
-        self.assertEqual(ecas.error_code, 401)
-        self.assertEqual(ecas.error_message, "Invalid username/password.")
+        self.assertEqual(ecas.error_code,
+                         INVALID_USERNAME_OR_PASSWORD.error_code)
+        self.assertEqual(ecas.error_message,
+                         INVALID_USERNAME_OR_PASSWORD.error_message)
 
     def test_missing_properties(self):
         response = self.app.post(
@@ -131,8 +134,9 @@ class TestDecorator(TestCase):
         ecas, errors = schema.load(load_json_data(response))
 
         self.assertFalse(errors)
-        self.assertEqual(ecas.error_code, 400)
-        self.assertEqual(ecas.error_message, "Invalid model provided")
+        self.assertEqual(ecas.error_code, INVALID_MODEL_PROVIDED.error_code)
+        self.assertEqual(ecas.error_message,
+                         INVALID_MODEL_PROVIDED.error_message)
         self.assertEqual(len(ecas.error_detail), 2)
         self.assertIn("username", ecas.error_detail)
         self.assertIn("password", ecas.error_detail)

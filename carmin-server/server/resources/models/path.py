@@ -1,216 +1,115 @@
-from .base_model import Model
-from server.common import util
+import os
+import mimetypes
+from marshmallow import Schema, fields, post_load, post_dump
 
 
-class Path(Model):
-    """Path
-
-    Args:
-        platform_path (str): A valid path, slash-separated. It must be consistent with the path of files and directories uploaded and downloaded by clients. For instance, if a user uploads a directory structure "dir/{file1.txt,file2.txt}", it is expected that the path of the first file will be "[prefix]/dir/file1.txt" and that the path of the second file will be "[prefix]/dir/file2.txt" where [prefix] depends on the upload parameters, in particular destination directory.
-        last_modification_date (int): Date of last modification, in seconds since the Epoch (UNIX timestamp).
-        is_directory (bool): True if the path represents a directory.
-        size (int, optional): For a file, size in bytes. For a directory, sum of all the sizes of the files contained in the directory (recursively).
-        execution_id (str, optional): Id of the Execution that produced the Path.
-        mime_type (str, optional): mime type based on RFC 6838.
+class Path():
+    """Path represents a filesystem resource (file or directory).
 
     Attributes:
-        platform_path (str): A valid path, slash-separated. It must be consistent with the path of files and directories uploaded and downloaded by clients. For instance, if a user uploads a directory structure "dir/{file1.txt,file2.txt}", it is expected that the path of the first file will be "[prefix]/dir/file1.txt" and that the path of the second file will be "[prefix]/dir/file2.txt" where [prefix] depends on the upload parameters, in particular destination directory.
-        last_modification_date (int): Date of last modification, in seconds since the Epoch (UNIX timestamp).
+        platform_path (str): Pathname, relative to the root data directory.
+        last_modification_date (int): Date of last modification, in seconds
+        since the Epoch (UNIX timestamp).
         is_directory (bool): True if the path represents a directory.
-        size (int, optional): For a file, size in bytes. For a directory, sum of all the sizes of the files contained in the directory (recursively).
-        execution_id (str, optional): Id of the Execution that produced the Path.
-        mime_type (str, optional): mime type based on RFC 6838.
+        size (int): For a file, size in bytes. For a directory, sum of all the
+        sizes of the files contained in the directory (recursively).
+        execution_id (str): ID of the execution that produced the Path.
+        mime_type (str): MIME type based on RFC 6838.
     """
 
     def __init__(self,
-                 platform_path: str = None,
-                 last_modification_date: int = None,
-                 is_directory: bool = None,
+                 platform_path: str,
+                 last_modification_date: int,
+                 is_directory: bool,
                  size: int = None,
                  execution_id: str = None,
                  mime_type: str = None):
+        self.platform_path = platform_path
+        self.last_modification_date = last_modification_date
+        self.is_directory = is_directory
+        self.size = size
+        self.execution_id = execution_id
+        self.mime_type = mime_type
 
-        self.swagger_types = {
-            'platform_path': str,
-            'last_modification_date': int,
-            'is_directory': bool,
-            'size': int,
-            'execution_id': str,
-            'mime_type': str
-        }
-
-        self.attribute_map = {
-            'platform_path': 'platformPath',
-            'last_modification_date': 'lastModificationDate',
-            'is_directory': 'isDirectory',
-            'size': 'size',
-            'execution_id': 'executionId',
-            'mime_type': 'mimeType'
-        }
-
-        self._platform_path = platform_path
-        self._last_modification_date = last_modification_date
-        self._is_directory = is_directory
-        self._size = size
-        self._execution_id = execution_id
-        self._mime_type = mime_type
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
     @classmethod
-    def from_dict(cls, dikt) -> 'Path':
-        """Returns the dict as a model
+    def object_from_pathname(cls, platform_data_path: str,
+                             relative_path_to_resource: str):
+        """object_from_pathname takes the path of the platform data root directory
+        as its first argument, and the path of the requested resource
+        relative to the root directory as second argument. It then returns a
+        Path object based on the associated file or directory.
+        """
+        absolute_path_to_resource = os.path.join(platform_data_path,
+                                                 relative_path_to_resource)
+        is_directory = os.path.isdir(absolute_path_to_resource)
 
-        Args:
-            dikt (dict): A dict.
+        # TODO: Add execution_id to Path object
 
+        if relative_path_to_resource == '':
+            platform_path = ''
+        else:
+            platform_path = os.path.relpath(absolute_path_to_resource,
+                                            platform_data_path)
+
+        return Path(
+            platform_path=platform_path,
+            last_modification_date=os.path.getmtime(absolute_path_to_resource),
+            is_directory=os.path.isdir(absolute_path_to_resource),
+            size=Path.get_path_size(absolute_path_to_resource, is_directory),
+            mime_type=mimetypes.guess_type(absolute_path_to_resource)[0])
+
+    @classmethod
+    def get_path_size(cls, absolute_path: str, is_dir: bool) -> int:
+        """get_path_size returns the size of the resource.
+
+        Attributes:
+            absolute_path (str): Absolute path to the resource.
+            is_dir (bool): True if the resource is a directory.
         Returns:
-            Path: The Path of this Path.
+            (int): Size of the resource.
         """
-        return util.deserialize_model(dikt, cls)
+        size = 0
+        if is_dir:
+            for dirpath, _, filenames in os.walk(absolute_path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    size += os.path.getsize(fp)
+        else:
+            size = os.path.getsize(absolute_path)
+        return size
 
-    @property
-    def platform_path(self) -> str:
-        """Gets the platform_path of this Path.
 
-        A valid path, slash-separated. It must be consistent with the path of files and directories uploaded and downloaded by clients. For instance, if a user uploads a directory structure \"dir/{file1.txt,file2.txt}\", it is expected that the path of the first file will be \"[prefix]/dir/file1.txt\" and that the path of the second file will be \"[prefix]/dir/file2.txt\" where [prefix] depends on the upload parameters, in particular destination directory.
+class PathSchema(Schema):
+    SKIP_VALUES = set([None])
 
-        Returns:
-            str: The platform_path of this Path.
+    class Meta:
+        ordered = True
+
+    platform_path = fields.Str(
+        required=True, dump_to='platformPath', load_from='platformPath')
+    last_modification_date = fields.Int(
+        required=True,
+        dump_to='lastModificationDate',
+        load_from='lastModificationDate')
+    is_directory = fields.Bool(
+        required=True, dump_to='isDirectory', load_from='isDirectory')
+    size = fields.Int()
+    execution_id = fields.Str(dump_to='executionId', load_from='executionId')
+    mime_type = fields.Str(dump_to='mimeType', load_from='mimeType')
+
+    @post_load
+    def to_model(self, data):
+        return Path(**data)
+
+    @post_dump
+    def remove_skip_values(self, data):
+        """remove_skip_values removes all values specified in the
+        SKIP_VALUES set from appearing in the 'dumped' JSON.
         """
-        return self._platform_path
-
-    @platform_path.setter
-    def platform_path(self, platform_path: str):
-        """Sets the platform_path of this Path.
-
-        A valid path, slash-separated. It must be consistent with the path of files and directories uploaded and downloaded by clients. For instance, if a user uploads a directory structure \"dir/{file1.txt,file2.txt}\", it is expected that the path of the first file will be \"[prefix]/dir/file1.txt\" and that the path of the second file will be \"[prefix]/dir/file2.txt\" where [prefix] depends on the upload parameters, in particular destination directory.
-
-        Args:
-            platform_path (str): The platform_path of this Path.
-        """
-        if platform_path is None:
-            raise ValueError(
-                "Invalid value for `platform_path`, must not be `None`")
-
-        self._platform_path = platform_path
-
-    @property
-    def last_modification_date(self) -> int:
-        """Gets the last_modification_date of this Path.
-
-        Date of last modification, in seconds since the Epoch (UNIX timestamp).
-
-        Returns:
-            int: The last_modification_date of this Path.
-        """
-        return self._last_modification_date
-
-    @last_modification_date.setter
-    def last_modification_date(self, last_modification_date: int):
-        """Sets the last_modification_date of this Path.
-
-        Date of last modification, in seconds since the Epoch (UNIX timestamp).
-
-        Args:
-            last_modification_date (int): The last_modification_date of this Path.
-        """
-        if last_modification_date is None:
-            raise ValueError(
-                "Invalid value for `last_modification_date`, must not be `None`"
-            )
-
-        self._last_modification_date = last_modification_date
-
-    @property
-    def is_directory(self) -> bool:
-        """Gets the is_directory of this Path.
-
-        True if the path represents a directory.
-
-        Returns:
-            bool: The is_directory of this Path.
-        """
-        return self._is_directory
-
-    @is_directory.setter
-    def is_directory(self, is_directory: bool):
-        """Sets the is_directory of this Path.
-
-        True if the path represents a directory.
-
-        Args:
-            is_directory (bool): The is_directory of this Path.
-        """
-        if is_directory is None:
-            raise ValueError(
-                "Invalid value for `is_directory`, must not be `None`")
-
-        self._is_directory = is_directory
-
-    @property
-    def size(self) -> int:
-        """Gets the size of this Path.
-
-        For a file, size in bytes. For a directory, sum of all the sizes of the files contained in the directory (recursively).
-
-        Returns:
-            int: The size of this Path.
-        """
-        return self._size
-
-    @size.setter
-    def size(self, size: int):
-        """Sets the size of this Path.
-
-        For a file, size in bytes. For a directory, sum of all the sizes of the files contained in the directory (recursively).
-
-        Args:
-            size (int): The size of this Path.
-        """
-
-        self._size = size
-
-    @property
-    def execution_id(self) -> str:
-        """Gets the execution_id of this Path.
-
-        Id of the Execution that produced the Path.
-
-        Returns:
-            str: The execution_id of this Path.
-        """
-        return self._execution_id
-
-    @execution_id.setter
-    def execution_id(self, execution_id: str):
-        """Sets the execution_id of this Path.
-
-        Id of the Execution that produced the Path.
-
-        Args:
-            execution_id (str): The execution_id of this Path.
-        """
-
-        self._execution_id = execution_id
-
-    @property
-    def mime_type(self) -> str:
-        """Gets the mime_type of this Path.
-
-        mime type based on RFC 6838.
-
-        Returns:
-            str: The mime_type of this Path.
-        """
-        return self._mime_type
-
-    @mime_type.setter
-    def mime_type(self, mime_type: str):
-        """Sets the mime_type of this Path.
-
-        mime type based on RFC 6838.
-
-        Args:
-            mime_type (str): The mime_type of this Path.
-        """
-
-        self._mime_type = mime_type
+        return {
+            key: value
+            for key, value in data.items() if value not in self.SKIP_VALUES
+        }
