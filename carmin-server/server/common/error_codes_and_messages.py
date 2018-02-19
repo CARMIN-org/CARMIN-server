@@ -5,6 +5,8 @@ def ErrorCodeAndMessageMarshaller(error_code_and_message: ErrorCodeAndMessage):
     return ErrorCodeAndMessageSchema().dump(error_code_and_message).data
 
 
+GENERIC_ERROR = ErrorCodeAndMessage(0,
+                                    "Something went wrong. Please try again.")
 UNAUTHORIZED = ErrorCodeAndMessage(1, "Unauthorized access")
 INVALID_PATH = ErrorCodeAndMessage(2, "Invalid pathname")
 INVALID_ACTION = ErrorCodeAndMessage(3, "Invalid action")

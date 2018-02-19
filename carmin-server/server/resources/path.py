@@ -4,11 +4,12 @@ import tarfile
 import tempfile
 import mimetypes
 import hashlib
+import shutil
 from typing import List
 from flask_restful import Resource, request
 from flask import send_file, Response
 from server import app
-from server.common.error_codes_and_messages import ErrorCodeAndMessageMarshaller, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION, MD5_ON_DIR, LIST_ACTION_ON_FILE
+from server.common.error_codes_and_messages import ErrorCodeAndMessageMarshaller, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION, MD5_ON_DIR, LIST_ACTION_ON_FILE, GENERIC_ERROR
 from .models.error_code_and_message import ErrorCodeAndMessageSchema
 from .models.path_md5 import PathMD5, PathMD5Schema
 from .models.path import Path as PathModel
@@ -63,8 +64,30 @@ class Path(Resource):
     def put(self, complete_path):
         pass
 
-    def delete(self, complete_path):
-        pass
+    def delete(self, complete_path: str = ''):
+        data_path = app.config['DATA_DIRECTORY']
+        requested_data_path = os.path.realpath(
+            os.path.join(data_path, complete_path))
+
+        if is_root(data_path, complete_path) or not is_safe_path(
+                data_path, requested_data_path):
+            return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
+
+        if os.path.isdir(requested_data_path):
+            try:
+                shutil.rmtree(requested_data_path)
+            except FileNotFoundError:
+                return ErrorCodeAndMessageMarshaller(INVALID_PATH), 400
+            except:
+                return ErrorCodeAndMessageMarshaller(GENERIC_ERROR), 400
+        else:
+            try:
+                os.remove(requested_data_path)
+            except FileNotFoundError:
+                return ErrorCodeAndMessageMarshaller(INVALID_PATH), 400
+            except:
+                return ErrorCodeAndMessageMarshaller(GENERIC_ERROR), 400
+        return Response(status=204)
 
 
 def content_action(complete_path: str) -> Response:
@@ -119,6 +142,14 @@ def is_safe_path(basedir: str, path: str,
     if follow_symlinks:
         return os.path.realpath(path).startswith(basedir)
     return os.path.abspath(path).startwith(basedir)
+
+
+def is_root(basedir: str, requested_path: str) -> bool:
+    absolute_path_to_resource = os.path.join(basedir, requested_path)
+
+    if os.path.realpath(absolute_path_to_resource) == basedir:
+        return True
+    return False
 
 
 def generate_md5(data_path: str) -> PathMD5:

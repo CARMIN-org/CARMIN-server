@@ -12,12 +12,13 @@ from server.resources.models.path_md5 import PathMD5, PathMD5Schema
 from server.resources.path import generate_md5
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture()
 def data_tester(tmpdir_factory):
     app.config.from_object(TestConfig)
     test_client = app.test_client()
 
     root_directory = tmpdir_factory.mktemp('data')
+    root_directory.mkdir('empty_dir')
     subdir = root_directory.mkdir('subdirectory')
     subdir.join('subdir_text.txt').write(
         "this is a text file inside data/subdir")
@@ -54,6 +55,8 @@ def dir_object():
 
 
 class TestPathResource():
+
+    # tests for GET
     def test_get_content_action_with_file(self, data_tester):
         response = data_tester.get('/path/file.json?action=content')
         assert response.data == b'{"test": "json"}'
@@ -107,4 +110,45 @@ class TestPathResource():
     def test_get_md5_action_with_dir_should_return_error(self, data_tester):
         response = data_tester.get('/path/subdirectory?action=md5')
         error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-        assert error == MD5_ON_DIR
+        assert error.error_message == MD5_ON_DIR.error_message
+
+    # tests for DELETE
+
+    def test_delete_single_file(self, data_tester):
+        file_to_delete = "file.json"
+        response = data_tester.delete('/path/{}'.format(file_to_delete))
+        assert (not os.path.exists(
+            os.path.join(app.config['DATA_DIRECTORY'], file_to_delete))
+                and response.status_code == 204)
+
+    def test_delete_non_empty_directory(self, data_tester):
+        directory_to_delete = "subdirectory"
+        response = data_tester.delete('/path/{}'.format(directory_to_delete))
+        assert (not os.path.exists(
+            os.path.join(app.config['DATA_DIRECTORY'], directory_to_delete))
+                and response.status_code == 204)
+
+    def test_delete_empty_directory(self, data_tester):
+        directory_to_delete = "empty_dir"
+        response = data_tester.delete('/path/{}'.format(directory_to_delete))
+        assert (not os.path.exists(
+            os.path.join(app.config['DATA_DIRECTORY'], directory_to_delete))
+                and response.status_code == 204)
+
+    def test_delete_invalid_file(self, data_tester):
+        file_to_delete = "does_not_exist"
+        response = data_tester.delete('/path/{}'.format(file_to_delete))
+        assert response.status_code == 400
+
+    def test_delete_root_directory(self, data_tester):
+        directory_to_delete = "./"
+        response = data_tester.delete('/path/{}'.format(directory_to_delete))
+        assert (os.path.exists(
+            app.config['DATA_DIRECTORY'])) and response.status_code == 403
+
+    def test_delete_parent_directory(self, data_tester):
+        directory_to_delete = "../.."
+        response = data_tester.delete('/path/{}'.format(directory_to_delete))
+        assert os.path.exists(
+            os.path.join(app.config['DATA_DIRECTORY'],
+                         directory_to_delete)) and response.status_code == 403
