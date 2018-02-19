@@ -68,4 +68,6 @@ def login_required(func):
         if not user:
             return ErrorCodeAndMessageMarshaller(INVALID_API_KEY), 401
 
+        return func(*args, **kwargs)
+
     return wrapper
