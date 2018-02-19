@@ -19,6 +19,9 @@ class ErrorCodeAndMessage():
         self.error_message = error_message
         self.error_detail = error_detail
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
 
 class ErrorCodeAndMessageSchema(Schema):
     class Meta:

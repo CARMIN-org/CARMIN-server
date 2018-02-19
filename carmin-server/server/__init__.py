@@ -4,7 +4,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
 from server.config import Config
-from server.properties_validation import properties_validation
+from server.startup_validation import start_up
 
 app = Flask(__name__)
 api = Api(app)
@@ -50,5 +50,5 @@ api.add_resource(Path, '/path/<path:complete_path>', '/path/')
 
 def main():
     """ Launch server"""
-    properties_validation()
+    start_up()
     app.run(host='0.0.0.0', port=int(8080))

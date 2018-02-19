@@ -4,7 +4,7 @@ import json
 from server import app
 from server.config import TestConfig
 from server.test.utils import load_json_data
-from server.common.error_codes_and_messages import MD5_ON_DIR, INVALID_PATH
+from server.common.error_codes_and_messages import MD5_ON_DIR, INVALID_PATH, UNAUTHORIZED
 from server.resources.models.path import Path, PathSchema
 from server.resources.models.error_code_and_message import (
     ErrorCodeAndMessage, ErrorCodeAndMessageSchema)
@@ -61,7 +61,7 @@ class TestPathResource():
     def test_get_content_action_with_invalid_file(self, data_tester):
         response = data_tester.get('/path/file2.json?action=content')
         error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-        assert error.error_message == INVALID_PATH.error_message
+        assert error == INVALID_PATH
 
     def test_get_content_action_with_dir(self, data_tester):
         response = data_tester.get('/path/subdirectory?action=content')
@@ -86,17 +86,17 @@ class TestPathResource():
     def test_get_properties_action_with_file(self, data_tester, file_object):
         response = data_tester.get('/path/file.json?action=properties')
         path = PathSchema().load(load_json_data(response)).data
-        assert path.__eq__(file_object)
+        assert path == file_object
 
     def test_get_properties_action_with_dir(self, data_tester, dir_object):
         response = data_tester.get('/path/subdirectory?action=properties')
         path = PathSchema().load(load_json_data(response)).data
-        assert path.__eq__(dir_object)
+        assert path == dir_object
 
     def test_query_outside_data_returns_error(self, data_tester):
         response = data_tester.get('/path/../../.?action=properties')
         error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-        assert error.error_message == 'Unauthorized access'
+        assert error == UNAUTHORIZED
 
     def test_get_md5_action_with_file(self, data_tester):
         response = data_tester.get('/path/file.json?action=md5')
@@ -107,4 +107,4 @@ class TestPathResource():
     def test_get_md5_action_with_dir_should_return_error(self, data_tester):
         response = data_tester.get('/path/subdirectory?action=md5')
         error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-        assert error.error_message == MD5_ON_DIR.error_message
+        assert error == MD5_ON_DIR

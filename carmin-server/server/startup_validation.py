@@ -4,9 +4,15 @@ which contains a description of the PlatformProperties object.
 import os
 import json
 from typing import Dict
+from pathlib import Path
 from .config import SUPPORTED_PROTOCOLS, SUPPORTED_MODULES
 from .resources.models.platform_properties import PlatformPropertiesSchema
 from .common.exceptions import MissingRequiredParameterError
+
+
+def start_up():
+    pipeline_and_data_directory_present()
+    properties_validation()
 
 
 def properties_validation(config_data: Dict = None) -> bool:
@@ -45,3 +51,21 @@ def properties_validation(config_data: Dict = None) -> bool:
             platform_properties.max_authorized_execution_timeout):
         raise ValueError('maxTimeout must be greater than minTimeout')
     return True
+
+
+def pipeline_and_data_directory_present():
+    """Checks if Pipeline and Data directories were specified at launch. If not,
+    raise MissingRequiredParameterError
+    """
+    if os.getenv('PIPELINE_DIRECTORY') is None:
+        raise MissingRequiredParameterError(
+            "ENV['PIPELINE_DIRECTORY'] must be set to Pipeline directory path")
+    if os.getenv('DATA_DIRECTORY') is None:
+        raise MissingRequiredParameterError(
+            "ENV['DATA_DIRECTORY'] must be set to input Data directory path")
+
+    if (not os.path.isdir(os.getenv('PIPELINE_DIRECTORY'))
+            or not os.path.isdir(os.getenv('DATA_DIRECTORY'))):
+        raise IOError(
+            "Data and Pipeline directories must be valid. Make sure that the given paths are absolute."
+        )

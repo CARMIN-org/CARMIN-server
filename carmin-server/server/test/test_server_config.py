@@ -1,11 +1,11 @@
 from typing import Dict
 import pytest
 import copy
-from server import properties_validation
+from server.startup_validation import properties_validation
 from server.common.exceptions import MissingRequiredParameterError
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def config_data() -> Dict:
     return {
         "platformName":
@@ -41,10 +41,9 @@ def config_data() -> Dict:
 
 
 def test_missing_required_parameter(config_data):
-    cd = copy.deepcopy(config_data)
-    del cd['supportedAPIVersion']
+    del config_data['supportedAPIVersion']
     with pytest.raises(MissingRequiredParameterError):
-        properties_validation(cd)
+        properties_validation(config_data)
 
 
 def test_empty_config_object():
@@ -53,25 +52,22 @@ def test_empty_config_object():
 
 
 def test_invalid_protocol(config_data):
-    cd = copy.deepcopy(config_data)
-    cd['supportedTransferProtocols'].append("invalidProtocol")
+    config_data['supportedTransferProtocols'].append("invalidProtocol")
     with pytest.raises(ValueError):
-        properties_validation(cd)
+        properties_validation(config_data)
 
 
 def test_max_authorized_execution_timeout_greater_than_min(config_data):
-    cd = copy.deepcopy(config_data)
-    cd['minAuthorizedExecutionTimeout'] = 1024
-    cd['maxAuthorizedExecutionTimeout'] = 64
+    config_data['minAuthorizedExecutionTimeout'] = 1024
+    config_data['maxAuthorizedExecutionTimeout'] = 64
     with pytest.raises(ValueError):
-        properties_validation(cd)
+        properties_validation(config_data)
 
 
 def test_max_authorized_execution_timeout_zero_value(config_data):
-    cd = copy.deepcopy(config_data)
-    cd['minAuthorizedExecutionTimeout'] = 2048
-    cd['maxAuthorizedExecutionTimeout'] = 0
-    assert properties_validation(cd)
+    config_data['minAuthorizedExecutionTimeout'] = 2048
+    config_data['maxAuthorizedExecutionTimeout'] = 0
+    assert properties_validation(config_data)
 
 
 def test_minimal_config():
@@ -84,7 +80,6 @@ def test_minimal_config():
 
 
 def test_https_support(config_data):
-    cd = copy.deepcopy(config_data)
-    cd['supportedTransferProtocols'] = ["http"]
+    config_data['supportedTransferProtocols'] = ["http"]
     with pytest.raises(MissingRequiredParameterError):
-        properties_validation(cd)
+        properties_validation(config_data)
