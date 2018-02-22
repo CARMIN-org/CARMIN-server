@@ -33,7 +33,7 @@ paths:
     post:
       summary: Returns the api key necessary to use the API.
       description:
-         The key can be dynamic (a new one for each request) or static (always the same one until the user change it in a back-end)
+        The key can be dynamic (a new one for each request) or static (always the same one until the user change it in a back-end)
       operationId: authenticate
       security: []
       requestBody:
@@ -51,6 +51,23 @@ paths:
                 $ref: '#/components/schemas/Authentication'
         default:
             $ref: '#/components/responses/Error'
+  /users/register:
+    post:
+      summary: Registers a new user account.
+      description:
+         Providing a valid admin apiKey, an admin can register new user to the CARMIN server.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthenticationCredentials'
+      responses:
+        '200':
+          description: successful response
+        default:
+            $ref: '#/components/responses/Error'        
   /executions:
     get:
       summary: Lists some executions.

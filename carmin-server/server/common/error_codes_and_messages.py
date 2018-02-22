@@ -22,3 +22,5 @@ INVALID_USERNAME_OR_PASSWORD = ErrorCodeAndMessage(
     30, "Invalid username/password.")
 MISSING_PIPELINE_PROPERTY = ErrorCodeAndMessage(
     35, "'property' must be specified to use the 'propertyValue' argument")
+USERNAME_ALREADY_EXISTS = ErrorCodeAndMessage(40,
+                                              "Username '{}' already exists")
