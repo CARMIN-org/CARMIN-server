@@ -6,7 +6,7 @@ from server.common.error_codes_and_messages import ErrorCodeAndMessageMarshaller
 from server.database.models.user import User, Role
 
 
-def marshal_request(schema):
+def marshal_request(schema, allow_none: bool = False):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -16,8 +16,11 @@ def marshal_request(schema):
                 body = request.get_json(force=True, silent=True)
 
                 if (body is None):
-                    return ErrorCodeAndMessageMarshaller(
-                        INVALID_MODEL_PROVIDED), 400
+                    if (allow_none):
+                        return func(model=body, *args, **kwargs)
+                    else:
+                        return ErrorCodeAndMessageMarshaller(
+                            INVALID_MODEL_PROVIDED), 400
 
                 model, errors = schema.load(body)
                 if (errors):
