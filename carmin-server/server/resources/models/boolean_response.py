@@ -1,28 +1,20 @@
-from server.common import util
-from .base_model import Model
+from marshmallow import Schema, fields, post_load
 
 
-class BooleanResponse(Model):
-    """A boolean response for "exists" action "getPath" operation
+class BooleanResponse():
+    def __init__(self, exists: bool):
+        self.exists = exists
 
-    Args:
-        exists (bool):
-    Attributes:
-        exists (bool):
-    """
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
-    def __init__(self, exists: bool = None):
-        self.swagger_type = {'exists': bool}
-        self.attribute_map = {'exists': 'exists'}
-        self._exists = exists
 
-    @classmethod
-    def from_dict(cls, dikt) -> 'BooleanResponse':
-        """Return the dict as a model.
+class BooleanResponseSchema(Schema):
+    class Meta:
+        ordered = True
 
-        Args:
-            dikt (dict): A dictionary.
-        Returns:
-            BooleanResponse: The BooleanResponse generated from the dict.
-        """
-        return util.deserialize_model(dikt, cls)
+    exists = fields.Boolean(required=True)
+
+    @post_load
+    def to_model(self, data):
+        return BooleanResponse(**data)

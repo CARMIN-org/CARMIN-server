@@ -14,6 +14,9 @@ MD5_ON_DIR = ErrorCodeAndMessage(
     4, "Invalid input: cannot generate md5 from directory")
 LIST_ACTION_ON_FILE = ErrorCodeAndMessage(
     5, "Invalid input: cannot use list action on a file")
+INVALID_UPLOAD_TYPE = ErrorCodeAndMessage(6,
+                                          "'type' must be 'File' or 'Archive'")
+ACTION_REQUIRED = ErrorCodeAndMessage(7, "'action' cannot be blank")
 INVALID_MODEL_PROVIDED = ErrorCodeAndMessage(10, "Invalid model provided")
 MODEL_DUMPING_ERROR = ErrorCodeAndMessage(15)
 MISSING_API_KEY = ErrorCodeAndMessage(20, "Missing HTTP header field apiKey")

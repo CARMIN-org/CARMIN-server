@@ -1,5 +1,7 @@
 import os
 import mimetypes
+from server import app
+from flask_restful import request
 from marshmallow import Schema, fields, post_load, post_dump
 
 
@@ -35,27 +37,22 @@ class Path():
         return self.__dict__ == other.__dict__
 
     @classmethod
-    def object_from_pathname(cls, platform_data_path: str,
-                             relative_path_to_resource: str):
+    def object_from_pathname(cls, absolute_path_to_resource: str):
         """object_from_pathname takes the path of the platform data root directory
         as its first argument, and the path of the requested resource
         relative to the root directory as second argument. It then returns a
         Path object based on the associated file or directory.
         """
-        absolute_path_to_resource = os.path.join(platform_data_path,
-                                                 relative_path_to_resource)
+
         is_directory = os.path.isdir(absolute_path_to_resource)
 
         # TODO: Add execution_id to Path object
 
-        if relative_path_to_resource == '':
-            platform_path = ''
-        else:
-            platform_path = os.path.relpath(absolute_path_to_resource,
-                                            platform_data_path)
-
         return Path(
-            platform_path=platform_path,
+            platform_path='{}path/{}'.format(
+                request.url_root,
+                os.path.relpath(absolute_path_to_resource,
+                                app.config['DATA_DIRECTORY'])),
             last_modification_date=os.path.getmtime(absolute_path_to_resource),
             is_directory=os.path.isdir(absolute_path_to_resource),
             size=Path.get_path_size(absolute_path_to_resource, is_directory),
