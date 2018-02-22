@@ -14,7 +14,7 @@ install:
 script:
 - cd ./carmin-server
 - pylint **/*.py --errors-only
-- coverage run --source carmin-server setup.py pytest
+- coverage run --include=server/\* -m pytest server
 
 after_success:
 - coveralls
