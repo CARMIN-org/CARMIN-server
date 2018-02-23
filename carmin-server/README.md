@@ -1,7 +1,7 @@
-# CARMIN-CBRAIN Server Implementation
+# CARMIN Server
 
 [![Build Status](https://travis-ci.org/louis-ver/CARMIN.svg?branch=develop)](https://travis-ci.org/louis-ver/CARMIN)
-[![Coverage Status](https://coveralls.io/repos/github/louis-ver/CARMIN/badge.svg?branch=setup-py)](https://coveralls.io/github/louis-ver/CARMIN?branch=setup-py)
+[![Coverage Status](https://coveralls.io/repos/github/louis-ver/CARMIN/badge.svg?branch=develop)](https://coveralls.io/github/louis-ver/CARMIN?branch=develop)
 
 ## Installation
 
