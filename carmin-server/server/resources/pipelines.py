@@ -3,7 +3,7 @@ import json
 from flask_restful import Resource, request
 from .models.pipeline import Pipeline, PipelineSchema
 from .decorators import marshal_response
-from server.common.pipeline_filter import pipelines
+from .helpers.pipelines import pipelines
 from server.common.error_codes_and_messages import MISSING_PIPELINE_PROPERTY
 
 

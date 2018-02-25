@@ -1,6 +1,5 @@
 from typing import List
 
-from .base_model import Model
 from .error_code_and_message import ErrorCodeAndMessageSchema, ErrorCodeAndMessage
 from .pipeline_parameter import PipelineParameterSchema, PipelineParameter
 
