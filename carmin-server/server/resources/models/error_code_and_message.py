@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, post_dump
 
 
 class ErrorCodeAndMessage():
@@ -14,7 +14,7 @@ class ErrorCodeAndMessage():
     def __init__(self,
                  error_code: int = None,
                  error_message: str = None,
-                 error_detail: dict = dict()):
+                 error_detail: dict = None):
         self.error_code = error_code
         self.error_message = error_message
         self.error_detail = error_detail
@@ -24,6 +24,8 @@ class ErrorCodeAndMessage():
 
 
 class ErrorCodeAndMessageSchema(Schema):
+    SKIP_VALUES = list([None])
+
     class Meta:
         ordered = True
 
@@ -36,3 +38,13 @@ class ErrorCodeAndMessageSchema(Schema):
     @post_load
     def to_model(self, data):
         return ErrorCodeAndMessage(**data)
+
+    @post_dump
+    def remove_skip_values(self, data):
+        """remove_skip_values removes all values specified in the
+        SKIP_VALUES set from appearing in the 'dumped' JSON.
+        """
+        return {
+            key: value
+            for key, value in data.items() if value not in self.SKIP_VALUES
+        }

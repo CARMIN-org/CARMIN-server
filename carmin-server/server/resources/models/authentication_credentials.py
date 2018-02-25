@@ -1,4 +1,4 @@
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, fields, post_load, validate
 
 
 class AuthenticationCredentials():
@@ -22,7 +22,10 @@ class AuthenticationCredentialsSchema(Schema):
     class Meta:
         ordered = True
 
-    username = fields.Str(required=True)
+    username = fields.Str(
+        required=True,
+        validate=validate.Regexp("^[a-zA-Z0-9_\-]*$", 0,
+                                 "'{input}' contains illegal characters."))
     password = fields.Str(required=True)
 
     @post_load

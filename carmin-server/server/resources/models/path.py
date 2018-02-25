@@ -1,4 +1,5 @@
 import os
+from pathlib import PurePath
 import mimetypes
 from server import app
 from flask_restful import request
@@ -48,11 +49,12 @@ class Path():
 
         # TODO: Add execution_id to Path object
 
+        rel_path = PurePath(
+            os.path.relpath(absolute_path_to_resource,
+                            app.config['DATA_DIRECTORY'])).as_posix()
+
         return Path(
-            platform_path='{}path/{}'.format(
-                request.url_root,
-                os.path.relpath(absolute_path_to_resource,
-                                app.config['DATA_DIRECTORY'])),
+            platform_path='{}path/{}'.format(request.url_root, rel_path),
             last_modification_date=os.path.getmtime(absolute_path_to_resource),
             is_directory=os.path.isdir(absolute_path_to_resource),
             size=Path.get_path_size(absolute_path_to_resource, is_directory),

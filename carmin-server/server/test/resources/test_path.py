@@ -20,6 +20,7 @@ from server.test.fakedata.users import standard_user
 def test_config(tmpdir_factory):
     test_config = get_test_config()
     test_config.db.session.add(standard_user())
+    test_config.db.session.commit()
 
     root_directory = tmpdir_factory.mktemp('data')
     subdir = root_directory.mkdir(standard_user().username)
@@ -251,7 +252,7 @@ class TestPathResource():
         error = error_from_response(response)
         assert error == INVALID_MODEL_PROVIDED
 
-    # TODO: Uncomment when @marshal_request has option for allow_none
+    # TODO: Uncomment when @unmarshal_request has option for allow_none
     #  def test_put_invalid_request(self, data_tester):
     #      response = data_tester.put(
     #          '/path/new_file2.txt',

@@ -7,15 +7,16 @@ from .models.authentication import Authentication, AuthenticationSchema
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD
 from server.database.models.user import User
-from .decorators import marshal_request, marshal_response, login_required
+from .decorators import unmarshal_request, marshal_response, get_db_session
 from server.common.util import generate_api_key
 
 
 class Authenticate(Resource):
-    @marshal_request(AuthenticationCredentialsSchema())
+    @get_db_session
+    @unmarshal_request(AuthenticationCredentialsSchema())
     @marshal_response(AuthenticationSchema())
-    def post(self, model):
-        user = User.query.filter_by(
+    def post(self, model, db_session):
+        user = db_session.query(User).filter_by(
             username=model.username, password=model.password).first()
 
         if not user:
@@ -23,8 +24,8 @@ class Authenticate(Resource):
 
         if (user.api_key is None):
             user.api_key = generate_api_key()
-            db.session.add(user)
-            db.session.commit()
+            db_session.add(user)
+            db_session.commit()
 
         result = Authentication(
             http_header="apiKey", http_header_value=user.api_key)

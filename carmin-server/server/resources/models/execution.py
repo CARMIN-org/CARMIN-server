@@ -1,10 +1,20 @@
-from typing import List, Dict
-from .base_model import Model
-from server.common import util
+import enum
+from typing import Dict, List
+from marshmallow import Schema, fields, post_load, post_dump, validates, ValidationError
 
 
-#TODO: Redo from code-gen
-class Execution(Model):
+class ExecutionStatus(enum.Enum):
+    Initializing = "Initializing"
+    Ready = "Ready"
+    Running = "Running"
+    Finished = "Finished"
+    InitializationFailed = "InitializationFailed"
+    ExecutionFailed = "ExecutionFailed"
+    Unknown = "Unknown"
+    Killed = "Killed"
+
+
+class Execution():
     """A Pipeline Execution
 
     Attributes:
@@ -22,53 +32,73 @@ class Execution(Model):
     """
 
     def __init__(self,
+                 name: str,
+                 pipeline_identifier: str,
+                 input_values: object,
                  identifier: str = None,
-                 name: str = None,
-                 pipeline_identifier: str = None,
                  timeout: int = None,
                  status: str = None,
-                 input_values: object = None,
                  returned_files: Dict[str, List[str]] = None,
                  study_identifier: str = None,
                  error_code: int = None,
                  start_date: int = None,
                  end_date: int = None):
-        self.swagger_types = {
-            'identifier': str,
-            'name': str,
-            'pipeline_identifier': str,
-            'timeout': int,
-            'status': str,
-            'input_values': object,
-            'returned_files': Dict[str, List[str]],
-            'study_identifier': str,
-            'error_code': int,
-            'start_date': int,
-            'end_date': int
-        }
 
-        self.attribute_map = {
-            'identifier': 'identifier',
-            'name': 'name',
-            'pipeline_identifier': 'pipelineIdentifier',
-            'timeout': 'timeout',
-            'status': 'status',
-            'input_values': 'inputValues',
-            'returned_files': 'returnedFiles',
-            'study_identifier': 'studyIdentifier',
-            'error_code': 'errorCode',
-            'start_date': 'startDate',
-            'end_date': 'endDate'
-        }
+        self.identifier = identifier
+        self.name = name
+        self.pipeline_identifier = pipeline_identifier
+        self.timeout = timeout
+        self.status = status
+        self.input_values = input_values
+        self.returned_files = returned_files
+        self.study_identifier = study_identifier
+        self.error_code = error_code
+        self.start_date = start_date
+        self.end_date = end_date
 
-        self._identifier = identifier
-        self._name = name
-        self._pipeline_identifier = pipeline_identifier
-        self._timeout = timeout
-        self._status = status
-        self._input_values = input_values
-        self._returned_files = returned_files
-        self._study_identifier = study_identifier
-        self._error_code = error_code
-        self._start_date = start_date
-        self._end_date = end_date
+
+class ExecutionSchema(Schema):
+    SKIP_VALUES = list([None])
+
+    class Meta:
+        ordered = True
+
+    identifier = fields.Str()
+    name = fields.Str(required=True)
+    pipeline_identifier = fields.Str(
+        required=True,
+        dump_to='pipelineIdentifier',
+        load_from='pipelineIdentifier')
+    timeout = fields.Int()
+    status = fields.Str()
+    input_values = fields.Dict(
+        required=True, dump_to='inputValues', load_from='inputValues')
+    returned_files = fields.Dict(
+        keys=fields.Str(),
+        values=fields.List(fields.Url()),
+        dump_to='returnedFiles',
+        load_from='returnedFiles')
+    study_identifier = fields.Str(
+        dump_to='studyIdentifier', load_from='studyIdentifier')
+    error_code = fields.Int(dump_to='errorCode', load_from='errorCode')
+    start_date = fields.Int(dump_to='startDate', load_from='startDate')
+    end_date = fields.Int(dump_to='endDate', load_from='endDate')
+
+    @validates('status')
+    def validate_status(self, data):
+        if data not in ExecutionStatus.__members__:
+            raise ValidationError('Invalid Execution status')
+
+    @post_load
+    def to_model(self, data):
+        return Execution(**data)
+
+    @post_dump
+    def remove_skip_values(self, data):
+        """remove_skip_values removes all values specified in the
+        SKIP_VALUES set from appearing in the 'dumped' JSON.
+        """
+        return {
+            key: value
+            for key, value in data.items() if value not in self.SKIP_VALUES
+        }

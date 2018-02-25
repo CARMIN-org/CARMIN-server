@@ -5,8 +5,17 @@ def ErrorCodeAndMessageMarshaller(error_code_and_message: ErrorCodeAndMessage):
     return ErrorCodeAndMessageSchema().dump(error_code_and_message).data
 
 
+def ErrorCodeAndMessageFormatter(error_code_and_message: ErrorCodeAndMessage,
+                                 *args):
+    error_code_and_message.error_message = error_code_and_message.error_message.format(
+        args)
+    return error_code_and_message
+
+
 GENERIC_ERROR = ErrorCodeAndMessage(0,
                                     "Something went wrong. Please try again.")
+UNEXPECTED_ERROR = ErrorCodeAndMessage(
+    1, "An unexpected error occured. Please contact the system administrator.")
 INVALID_MODEL_PROVIDED = ErrorCodeAndMessage(10, "Invalid model provided")
 MODEL_DUMPING_ERROR = ErrorCodeAndMessage(15)
 MISSING_API_KEY = ErrorCodeAndMessage(20, "Missing HTTP header field apiKey")
@@ -30,3 +39,7 @@ INVALID_UPLOAD_TYPE = ErrorCodeAndMessage(80,
 ACTION_REQUIRED = ErrorCodeAndMessage(85, "'action' cannot be blank")
 NOT_AN_ARCHIVE = ErrorCodeAndMessage(90, 'Invalid zip: {}')
 INVALID_BASE_64 = ErrorCodeAndMessage(95, 'Invalid base64: {}')
+EXECUTION_IDENTIFIER_MUST_NOT_BE_SET = ErrorCodeAndMessage(
+    100,
+    "'executionIdentifier' must not be set. It will be assigned by the system upon execution initialization."
+)

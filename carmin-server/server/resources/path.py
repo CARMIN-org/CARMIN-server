@@ -13,7 +13,7 @@ from .models.path_md5 import PathMD5Schema
 from .models.boolean_response import BooleanResponse, BooleanResponseSchema
 from .models.path import Path as PathModel
 from .models.path import PathSchema
-from .decorators import login_required, marshal_request
+from .decorators import login_required, unmarshal_request
 from .helpers.path import (is_safe_path, is_root_dir_for_user, upload_file,
                            upload_archive, create_directory, generate_md5,
                            make_tarball, parent_dir_exists, is_data_accessible)
@@ -71,7 +71,7 @@ class Path(Resource):
             return ErrorCodeAndMessageMarshaller(INVALID_ACTION), 400
 
     @login_required
-    @marshal_request(UploadDataSchema(), allow_none=True)
+    @unmarshal_request(UploadDataSchema(), allow_none=True)
     def put(self, user, model, complete_path: str = ''):
         data_path = app.config['DATA_DIRECTORY']
         requested_data_path = os.path.normpath(
