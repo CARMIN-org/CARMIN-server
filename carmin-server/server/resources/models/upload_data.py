@@ -1,6 +1,10 @@
+import enum
 from marshmallow import Schema, fields, post_load
 
-UPLOAD_TYPES = ["File", "Archive"]
+
+class UploadType(enum.Enum):
+    File = "File"
+    Archive = "Archive"
 
 
 class UploadData():
@@ -20,7 +24,10 @@ class UploadDataSchema(Schema):
     base64_content = fields.Str(
         required=True, dump_to='base64Content', load_from='base64Content')
     upload_type = fields.Str(
-        validate=lambda n: n in UPLOAD_TYPES, dump_to='type', load_from='type')
+        required=True,
+        validate=lambda n: n in UploadType.__members__,
+        dump_to='type',
+        load_from='type')
     md5 = fields.Str()
 
     @post_load

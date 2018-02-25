@@ -3,7 +3,7 @@ import shutil
 import mimetypes
 from typing import List
 from flask_restful import Resource, request
-from flask import send_file, Response
+from flask import send_file, Response, make_response
 from server import app
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageMarshaller, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION,
@@ -14,9 +14,9 @@ from .models.boolean_response import BooleanResponse, BooleanResponseSchema
 from .models.path import Path as PathModel
 from .models.path import PathSchema
 from .decorators import login_required, marshal_request
-from .helpers.path import (is_safe_path, is_root, upload_file, upload_archive,
-                           create_directory, generate_md5, make_tarball,
-                           parent_dir_exists)
+from .helpers.path import (is_safe_path, is_root_dir_for_user, upload_file,
+                           upload_archive, create_directory, generate_md5,
+                           make_tarball, parent_dir_exists, is_data_accessible)
 
 
 class Path(Resource):
@@ -27,7 +27,8 @@ class Path(Resource):
     return various informations in JSON.
     """
 
-    def get(self, complete_path: str = ''):
+    @login_required
+    def get(self, user, complete_path: str = ''):
         """The @marshal_response() decorator is not used since this method can return
         a number of different Schemas or binary content. Use `return schema.dump()`
         instead, where `schema` is the Schema of the class to be returned.
@@ -36,19 +37,18 @@ class Path(Resource):
         data_path = app.config['DATA_DIRECTORY']
 
         action = request.args.get('action')
-        if action:
-            action = action.lower()
-
         full_absolute_path = os.path.normpath(
             os.path.join(data_path, complete_path))
 
-        if not is_safe_path(full_absolute_path):
+        if not is_safe_path(full_absolute_path) or not is_data_accessible(
+                full_absolute_path, user):
             return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
         if not os.path.exists(full_absolute_path) and action != 'exists':
             return ErrorCodeAndMessageMarshaller(INVALID_PATH), 401
 
         if not action:
             return ErrorCodeAndMessageMarshaller(ACTION_REQUIRED), 400
+        action = action.lower()
         if action == 'content':
             return get_content(full_absolute_path)
         elif action == 'properties':
@@ -59,7 +59,7 @@ class Path(Resource):
             return BooleanResponseSchema().dump(BooleanResponse(path_exists))
         elif action == 'list':
             if not os.path.isdir(full_absolute_path):
-                return ErrorCodeAndMessageMarshaller(LIST_ACTION_ON_FILE)
+                return ErrorCodeAndMessageMarshaller(LIST_ACTION_ON_FILE), 400
             directory_list = get_path_list(data_path, complete_path)
             return PathSchema(many=True).dump(directory_list)
         elif action == 'md5':
@@ -70,38 +70,49 @@ class Path(Resource):
         else:
             return ErrorCodeAndMessageMarshaller(INVALID_ACTION), 400
 
-    # TODO: Uncomment once the decorator accepts allow_none param
-    #  @marshal_request(UploadDataSchema())
-    def put(self, complete_path: str = ''):
+    @login_required
+    @marshal_request(UploadDataSchema(), allow_none=True)
+    def put(self, user, model, complete_path: str = ''):
         data_path = app.config['DATA_DIRECTORY']
         requested_data_path = os.path.normpath(
             os.path.join(data_path, complete_path))
 
-        if not is_safe_path(requested_data_path):
+        if not is_safe_path(requested_data_path) or not is_data_accessible(
+                requested_data_path, user):
             return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
         if not parent_dir_exists(requested_data_path):
             return ErrorCodeAndMessageMarshaller(INVALID_PATH), 401
-        upload_data = request.get_json(force=True, silent=True)
 
-        if not upload_data:
-            return create_directory(requested_data_path)
+        if not model:
+            path, error = create_directory(requested_data_path)
+            if error:
+                return ErrorCodeAndMessageMarshaller(error), 400
+            file_location_header = {'Location': path.platform_path}
+            string_path = str(PathSchema().dump(path).data)
+            return make_response((string_path, 201, file_location_header))
 
-        if upload_data["type"] == "File":
-            upload_data = UploadDataSchema().load(upload_data).data
-            return upload_file(upload_data, requested_data_path)
-        elif upload_data["type"] == "Archive":
-            upload_data = UploadDataSchema().load(upload_data).data
-            return upload_archive(upload_data, requested_data_path)
+        if model.upload_type == "File":
+            path, error = upload_file(model, requested_data_path)
+            if error:
+                return ErrorCodeAndMessageMarshaller(error), 400
+            return PathSchema().dump(path).data, 201
+        elif model.upload_type == "Archive":
+            path, error = upload_archive(model, requested_data_path)
+            if error:
+                return ErrorCodeAndMessageMarshaller(error), 400
+            return PathSchema().dump(path).data, 201
         else:
             return ErrorCodeAndMessageMarshaller(INVALID_UPLOAD_TYPE), 400
 
-    def delete(self, complete_path: str = ''):
+    @login_required
+    def delete(self, user, complete_path: str = ''):
         data_path = app.config['DATA_DIRECTORY']
         requested_data_path = os.path.normpath(
             os.path.join(data_path, complete_path))
 
-        if is_root(
-                requested_data_path) or not is_safe_path(requested_data_path):
+        if (is_root_dir_for_user(requested_data_path, user)
+                or not is_safe_path(requested_data_path, user.username)
+                or not is_data_accessible(requested_data_path, user)):
             return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
 
         if os.path.isdir(requested_data_path):
