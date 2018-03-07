@@ -2,17 +2,22 @@
 which contains a description of the PlatformProperties object.
 """
 import os
+import sys
 import json
 from typing import Dict
 from pathlib import Path
+from werkzeug.security import generate_password_hash
 from .config import SUPPORTED_PROTOCOLS, SUPPORTED_MODULES
 from .resources.models.platform_properties import PlatformPropertiesSchema
 from .common.exceptions import MissingRequiredParameterError
+from .resources.decorators import get_db_session
+from .database.models.user import User, Role
 
 
 def start_up():
     pipeline_and_data_directory_present()
     properties_validation()
+    find_or_create_admin()
 
 
 def properties_validation(config_data: Dict = None) -> bool:
@@ -69,3 +74,16 @@ def pipeline_and_data_directory_present():
         raise IOError(
             "Data and Pipeline directories must be valid. Make sure that the given paths are absolute."
         )
+
+
+@get_db_session
+def find_or_create_admin(**kwargs):
+    db_session = kwargs["db_session"]
+    admin = db_session.query(User).filter_by(role=Role.admin).first()
+    if not admin:
+        first_admin = User(
+            username="admin",
+            password=generate_password_hash("admin"),
+            role=Role.admin)
+        db_session.add(first_admin)
+        db_session.commit()

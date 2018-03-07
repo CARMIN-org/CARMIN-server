@@ -1,12 +1,14 @@
-import os
-import json
-from flask_restful import Resource
-from .models.execution import Execution, ExecutionSchema
-from server import app
+from flask_restful import Resource, request
+from sqlalchemy.exc import IntegrityError
 from server.database.models.execution import Execution, ExecutionStatus
-from .decorators import unmarshal_request, marshal_response, login_required
-from server.common.error_codes_and_messages import EXECUTION_IDENTIFIER_MUST_NOT_BE_SET
-from server.resources.helpers.executions import write_inputs_to_file
+from server.common.error_codes_and_messages import (
+    EXECUTION_IDENTIFIER_MUST_NOT_BE_SET, INVALID_INPUT_FILE,
+    ErrorCodeAndMessageFormatter, ErrorCodeAndMessageMarshaller)
+from server.resources.helpers.executions import (
+    write_inputs_to_file, create_execution_directory, get_execution_as_model,
+    input_files_exist, validate_request_model)
+from .models.execution import ExecutionSchema
+from .decorators import unmarshal_request, marshal_response, login_required, get_db_session
 
 
 class Executions(Resource):
@@ -14,22 +16,37 @@ class Executions(Resource):
         pass
 
     @login_required
+    @get_db_session
     @unmarshal_request(ExecutionSchema())
     @marshal_response(ExecutionSchema())
-    def post(self, model, user):
-        if (model.identifier):
-            return EXECUTION_IDENTIFIER_MUST_NOT_BE_SET
+    def post(self, model, user, db_session):
+        _, error = validate_request_model(model, request.url_root)
+        if error:
+            return error
 
-        # TODO: Validate that the pipeline_identifier is valid
+        try:
+            new_execution = Execution(
+                name=model.name,
+                pipeline_identifier=model.pipeline_identifier,
+                timeout=model.timeout,
+                status=ExecutionStatus.Initializing,
+                study_identifier=model.study_identifier,
+                creator_username=user.username)
+            db_session.add(new_execution)
+            db_session.commit()
 
-        # TODO: If study_identifier is set, validate it exists
+            path, error = create_execution_directory(new_execution, user)
+            if error:
+                db_session.rollback()
+                return error
 
-        new_execution = Execution(
-            name=model.name,
-            pipeline_identifier=model.pipeline_identifier,
-            timeout=model.timeout,
-            status=ExecutionStatus.Initializing,
-            study_identifier=model.study_identifier)
+            error = write_inputs_to_file(model, path)
+            if error:
+                db_session.rollback()
+                return error
 
-        #  write_inputs_to_file(model, user_execution_dir)
-        return model
+            execution, error = get_execution_as_model(
+                user.username, new_execution.identifier, db_session)
+            return execution
+        except IntegrityError:
+            db_session.rollback()

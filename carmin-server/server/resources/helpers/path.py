@@ -31,15 +31,22 @@ def is_safe_path(path: str, follow_symlinks: bool = True) -> bool:
 def is_data_accessible(path: str, user: User) -> bool:
     if user.role == Role.admin:
         return True
-    return os.path.realpath(path).startswith(get_user_data_directory(user))
+    return os.path.realpath(path).startswith(
+        get_user_data_directory(user.username))
 
 
-def get_user_data_directory(user: User) -> str:
-    return os.path.join(app.config['DATA_DIRECTORY'], user.username)
+def is_execution_dir(path: str, username: str) -> bool:
+    user_execution_dir = os.path.join(
+        get_user_data_directory(username), EXECUTIONS_DIRNAME)
+    return os.path.realpath(path).startswith(user_execution_dir)
 
 
-def is_root_dir_for_user(requested_path: str, user: User) -> bool:
-    return requested_path == get_user_data_directory(user)
+def get_user_data_directory(username: str) -> str:
+    return os.path.join(app.config['DATA_DIRECTORY'], username)
+
+
+def is_safe_for_delete(requested_path: str, username: str) -> bool:
+    return not requested_path == get_user_data_directory(username)
 
 
 def upload_file(upload_data: UploadData,
@@ -111,3 +118,22 @@ def parent_dir_exists(requested_data_path: str) -> bool:
     parent_directory = os.path.abspath(
         os.path.join(requested_data_path, os.pardir))
     return os.path.exists(parent_directory)
+
+
+def platform_path_exists(url_root: str, platform_path: str) -> (bool, str):
+    path_url = '{}path/'.format(url_root)
+
+    if isinstance(platform_path, list):
+        for path in platform_path:
+            exists = os.path.exists(
+                os.path.join(app.config['DATA_DIRECTORY'],
+                             path[len(path_url):]))
+            if not exists:
+                return False, path
+        return True, None
+    return os.path.exists(
+        os.path.join(app.config['DATA_DIRECTORY'],
+                     platform_path[len(path_url):])), platform_path
+
+
+from .executions import EXECUTIONS_DIRNAME

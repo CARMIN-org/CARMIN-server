@@ -5,7 +5,7 @@ class Execution(Resource):
     def get(self, execution_identifier):
         pass
 
-    def put(self, execution_identifier):
+    def put(self, user, execution_identifier):
         pass
 
     def delete(self, execution_identifier):

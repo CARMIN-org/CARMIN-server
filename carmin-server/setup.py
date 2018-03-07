@@ -5,7 +5,10 @@ from setuptools import setup, find_packages
 
 NAME = "carmin-server"
 VERSION = "0.5.4"
-DEPS = ["flask-restful", "flask-sqlalchemy", "marshmallow"]
+DEPS = [
+    "flask-restful", "flask-sqlalchemy", "marshmallow",
+    "marshmallow_enum==1.4.*", "boutiques"
+]
 
 setup(
     name=NAME,

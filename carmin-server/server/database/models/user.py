@@ -21,11 +21,11 @@ class User(db.Model):
     Attributes:
         username (str):
         password (str):
-        role (Role):        
+        role (Role):
         api_key (str):
     """
 
-    username = Column(String, primary_key=True)
-    password = Column(String)
-    role = Column(Enum(Role))
+    username = Column(String, primary_key=True, nullable=False)
+    password = Column(String, nullable=False)
+    role = Column(Enum(Role), nullable=False)
     api_key = Column(String, unique=True)

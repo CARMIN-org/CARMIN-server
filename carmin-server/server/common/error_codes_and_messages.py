@@ -8,7 +8,7 @@ def ErrorCodeAndMessageMarshaller(error_code_and_message: ErrorCodeAndMessage):
 def ErrorCodeAndMessageFormatter(error_code_and_message: ErrorCodeAndMessage,
                                  *args):
     error_code_and_message.error_message = error_code_and_message.error_message.format(
-        args)
+        *args)
     return error_code_and_message
 
 
@@ -43,3 +43,8 @@ EXECUTION_IDENTIFIER_MUST_NOT_BE_SET = ErrorCodeAndMessage(
     100,
     "'executionIdentifier' must not be set. It will be assigned by the system upon execution initialization."
 )
+EXECUTION_NOT_FOUND = ErrorCodeAndMessage(105, "Execution not found.")
+INVALID_INPUT_FILE = ErrorCodeAndMessage(110,
+                                         "Input file '{}' does not exist.")
+INVALID_PIPELINE_IDENTIFIER = ErrorCodeAndMessage(
+    115, "Invalid 'pipelineIdentifier'")

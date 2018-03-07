@@ -4,7 +4,6 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
 from server.config import Config
-from server.startup_validation import start_up
 
 app = Flask(__name__)
 api = Api(app)
@@ -12,8 +11,10 @@ app.config.from_object(Config)
 db = SQLAlchemy(app)
 
 from server.database.models.user import User
+from server.database.models.execution import Execution
 db.create_all()
 
+from server.startup_validation import start_up
 from server.resources.authenticate import Authenticate
 from server.resources.register import Register
 from server.resources.executions import Executions

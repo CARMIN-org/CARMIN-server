@@ -1,8 +1,10 @@
 import random
+import sys
 import json
-from server import db
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_restful import Resource, fields, request
 from flask import make_response, jsonify, abort
+from server import db
 from .models.authentication import Authentication, AuthenticationSchema
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD
@@ -17,9 +19,9 @@ class Authenticate(Resource):
     @marshal_response(AuthenticationSchema())
     def post(self, model, db_session):
         user = db_session.query(User).filter_by(
-            username=model.username, password=model.password).first()
+            username=model.username).first()
 
-        if not user:
+        if not user or not check_password_hash(user.password, model.password):
             return INVALID_USERNAME_OR_PASSWORD
 
         if (user.api_key is None):

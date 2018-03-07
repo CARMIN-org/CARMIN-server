@@ -1,4 +1,3 @@
-import pytest
 from server.resources.models.pipeline import Pipeline, PipelineParameter
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
 
@@ -25,6 +24,13 @@ PipelineParamTwo = PipelineParameter(
     is_optional=False,
     is_returned_value=True,
     description="PipelineParam2 Description")
+
+PipelineParamThree = PipelineParameter(
+    name="file_input",
+    parameter_type="File",
+    is_optional=False,
+    is_returned_value=False,
+    description="PipelineParamThree description")
 
 PipelineOne = Pipeline(
     identifier="one",
@@ -57,3 +63,15 @@ PipelineThree = Pipeline(
                 PropNameTwo: PropValueThree},
     error_codes_and_messages=list(
         [ErrorCodeAndMessage(2000, "Pipeline three error code and message")]))
+
+PIPELINE_FOUR = Pipeline(
+    identifier="pipeline1",
+    name="pipeline1",
+    version="4.0.0",
+    description="test pipeline",
+    can_execute=True,
+    parameters=list([PipelineParamThree]),
+    properties={PropNameOne: PropValueTwo,
+                PropNameTwo: PropValueThree},
+    error_codes_and_messages=list(
+        [ErrorCodeAndMessage(2000, "Pipeline four error code and message")]))

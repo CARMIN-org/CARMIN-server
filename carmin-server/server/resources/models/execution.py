@@ -1,6 +1,7 @@
 import enum
 from typing import Dict, List
 from marshmallow import Schema, fields, post_load, post_dump, validates, ValidationError
+from marshmallow_enum import EnumField
 
 
 class ExecutionStatus(enum.Enum):
@@ -37,7 +38,7 @@ class Execution():
                  input_values: object,
                  identifier: str = None,
                  timeout: int = None,
-                 status: str = None,
+                 status: ExecutionStatus = None,
                  returned_files: Dict[str, List[str]] = None,
                  study_identifier: str = None,
                  error_code: int = None,
@@ -70,7 +71,7 @@ class ExecutionSchema(Schema):
         dump_to='pipelineIdentifier',
         load_from='pipelineIdentifier')
     timeout = fields.Int()
-    status = fields.Str()
+    status = EnumField(ExecutionStatus)
     input_values = fields.Dict(
         required=True, dump_to='inputValues', load_from='inputValues')
     returned_files = fields.Dict(
@@ -83,11 +84,6 @@ class ExecutionSchema(Schema):
     error_code = fields.Int(dump_to='errorCode', load_from='errorCode')
     start_date = fields.Int(dump_to='startDate', load_from='startDate')
     end_date = fields.Int(dump_to='endDate', load_from='endDate')
-
-    @validates('status')
-    def validate_status(self, data):
-        if data not in ExecutionStatus.__members__:
-            raise ValidationError('Invalid Execution status')
 
     @post_load
     def to_model(self, data):

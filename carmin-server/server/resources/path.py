@@ -14,9 +14,10 @@ from .models.boolean_response import BooleanResponse, BooleanResponseSchema
 from .models.path import Path as PathModel
 from .models.path import PathSchema
 from .decorators import login_required, unmarshal_request
-from .helpers.path import (is_safe_path, is_root_dir_for_user, upload_file,
+from .helpers.path import (is_safe_path, is_safe_for_delete, upload_file,
                            upload_archive, create_directory, generate_md5,
-                           make_tarball, parent_dir_exists, is_data_accessible)
+                           make_tarball, parent_dir_exists, is_data_accessible,
+                           is_execution_dir)
 
 
 class Path(Resource):
@@ -78,7 +79,8 @@ class Path(Resource):
             os.path.join(data_path, complete_path))
 
         if not is_safe_path(requested_data_path) or not is_data_accessible(
-                requested_data_path, user):
+                requested_data_path, user) or is_execution_dir(
+                    requested_data_path, user.username):
             return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
         if not parent_dir_exists(requested_data_path):
             return ErrorCodeAndMessageMarshaller(INVALID_PATH), 401
@@ -110,9 +112,10 @@ class Path(Resource):
         requested_data_path = os.path.normpath(
             os.path.join(data_path, complete_path))
 
-        if (is_root_dir_for_user(requested_data_path, user)
+        if (not is_safe_for_delete(requested_data_path, user.username)
                 or not is_safe_path(requested_data_path, user.username)
-                or not is_data_accessible(requested_data_path, user)):
+                or not is_data_accessible(requested_data_path, user)
+                or is_execution_dir(requested_data_path, user.username)):
             return ErrorCodeAndMessageMarshaller(UNAUTHORIZED), 403
 
         if os.path.isdir(requested_data_path):

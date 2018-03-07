@@ -1,5 +1,6 @@
 from server import db
 from flask_restful import Resource
+from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import USERNAME_ALREADY_EXISTS
@@ -26,7 +27,7 @@ class Register(Resource):
         try:
             new_user = User(
                 username=model.username,
-                password=model.password,
+                password=generate_password_hash(model.password),
                 role=Role.user)
 
             db_session.add(new_user)

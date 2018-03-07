@@ -6,14 +6,14 @@ from server.test.utils import get_test_config, json_request_data, load_json_data
 from server.resources.models.authentication import AuthenticationSchema
 from server.resources.models.error_code_and_message import ErrorCodeAndMessageSchema
 from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD, INVALID_MODEL_PROVIDED
+from server.test.fakedata.users import standard_user
 
 
 @pytest.yield_fixture(scope="module")
 def test_config(tmpdir_factory):
     test_config = get_test_config()
 
-    user = User(username="NiceTestUser", password="ImpressiveP±ssw0rd")
-    test_config.db.session.add(user)
+    test_config.db.session.add(standard_user(True))
     test_config.db.session.commit()
 
     yield test_config
@@ -21,14 +21,19 @@ def test_config(tmpdir_factory):
     test_config.db.drop_all()
 
 
+@pytest.yield_fixture
+def test_user():
+    return {
+        "username": standard_user().username,
+        "password": standard_user().password
+    }
+
+
 class TestAuthenticate():
-    def test_valid_login(self, test_config):
+    def test_valid_login(self, test_config, test_user):
         response = test_config.test_client.post(
             "/authenticate",
-            data=json_request_data({
-                "username": "NiceTestUser",
-                "password": "ImpressiveP±ssw0rd"
-            }),
+            data=json_request_data(test_user),
             follow_redirects=True)
 
         assert response.status_code == 200
@@ -39,13 +44,10 @@ class TestAuthenticate():
         assert not errors
         assert auth_cred.http_header == "apiKey"
 
-    def test_same_api_key(self, test_config):
+    def test_same_api_key(self, test_config, test_user):
         response = test_config.test_client.post(
             "/authenticate",
-            data=json_request_data({
-                "username": "NiceTestUser",
-                "password": "ImpressiveP±ssw0rd"
-            }),
+            data=json_request_data(test_user),
             follow_redirects=True)
 
         assert response.status_code == 200
@@ -56,10 +58,7 @@ class TestAuthenticate():
 
         response = test_config.test_client.post(
             "/authenticate",
-            data=json_request_data({
-                "username": "NiceTestUser",
-                "password": "ImpressiveP±ssw0rd"
-            }),
+            data=json_request_data(test_user),
             follow_redirects=True)
 
         assert response.status_code == 200
@@ -68,13 +67,12 @@ class TestAuthenticate():
         assert not errors2
         assert auth_cred.http_header_value == auth_cred2.http_header_value
 
-    def test_invalid_username(self, test_config):
+    def test_invalid_username(self, test_config, test_user):
+        test_user["username"] = "NOT_{}".format(test_user["username"])
+
         response = test_config.test_client.post(
             "/authenticate",
-            data=json_request_data({
-                "username": "UnexistantUsername",
-                "password": "ImpressiveP±ssw0rd"
-            }),
+            data=json_request_data(test_user),
             follow_redirects=True)
 
         assert response.status_code == 400
@@ -85,13 +83,12 @@ class TestAuthenticate():
         assert not errors
         assert ecam == INVALID_USERNAME_OR_PASSWORD
 
-    def test_invalid_password(self, test_config):
+    def test_invalid_password(self, test_config, test_user):
+        test_user["password"] = "NOT_{}".format(test_user["password"])
+
         response = test_config.test_client.post(
             "/authenticate",
-            data=json_request_data({
-                "username": "NiceTestUser",
-                "password": "NotTheRightPassword"
-            }),
+            data=json_request_data(test_user),
             follow_redirects=True)
 
         assert response.status_code == 400
