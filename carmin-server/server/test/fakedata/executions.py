@@ -23,9 +23,9 @@ POST_INVALID_EXECUTION_ARRAY_FILE_NOT_EXIST = Execution(
     pipeline_identifier="pipeline1",
     input_values={
         "file_input": [
-            "http://localhost/path/{}/test.txt".format(
-                standard_user().username),
             "http://localhost/path/{}/does_not_exist.txt".format(
+                standard_user().username),
+            "http://localhost/path/{}/test.txt".format(
                 standard_user().username)
         ]
     })

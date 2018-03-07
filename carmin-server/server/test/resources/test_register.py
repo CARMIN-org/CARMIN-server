@@ -1,20 +1,21 @@
 import pytest
 import os
+import copy
 from server import app
 from server.resources.models.error_code_and_message import ErrorCodeAndMessageSchema
 from server.common.error_codes_and_messages import (
     INVALID_API_KEY, UNAUTHORIZED, MISSING_API_KEY, USERNAME_ALREADY_EXISTS,
     UNEXPECTED_ERROR)
 from server.test.utils import get_test_config, json_request_data, load_json_data
-from server.test.fakedata.users import admin, standard_user
+from server.test.fakedata.users import admin, standard_user, standard_user_2
 from server.database.models.user import User
 
 
 @pytest.yield_fixture
 def test_config(tmpdir_factory):
     test_config = get_test_config()
-    test_config.db.session.add(admin())
-    test_config.db.session.add(standard_user())
+    test_config.db.session.add(admin(True))
+    test_config.db.session.add(standard_user(True))
     test_config.db.session.commit()
 
     root_directory = tmpdir_factory.mktemp('data')
@@ -27,7 +28,10 @@ def test_config(tmpdir_factory):
 
 @pytest.yield_fixture
 def test_user():
-    return {"username": "newTestUser", "password": "ImpressiveP±ssw0rd"}
+    return {
+        "username": standard_user_2().username,
+        "password": standard_user_2().password
+    }
 
 
 class TestRegisterResource():
@@ -97,7 +101,12 @@ class TestRegisterResource():
             follow_redirects=True)
         error = ErrorCodeAndMessageSchema().load(
             load_json_data(response2)).data
-        assert error == USERNAME_ALREADY_EXISTS
+
+        expected_error_code_and_message = copy.deepcopy(
+            USERNAME_ALREADY_EXISTS)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            test_user["username"])
+        assert error == expected_error_code_and_message
 
     def test_register_already_existing_user_folder(self, test_config,
                                                    test_user):

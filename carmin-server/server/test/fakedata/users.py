@@ -16,3 +16,11 @@ def standard_user(encrypted=False):
         password=generate_password_hash("user") if encrypted else "user",
         role=Role.user,
         api_key="standard-user-api-key")
+
+
+def standard_user_2(encrypted=False):
+    return User(
+        username="user2",
+        password=generate_password_hash("user2") if encrypted else "user",
+        role=Role.user,
+        api_key="standard-user-2-api-key")

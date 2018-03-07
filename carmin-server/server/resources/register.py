@@ -22,7 +22,8 @@ class Register(Resource):
             username=model.username).first()
 
         if already_existing_user:
-            return ErrorCodeAndMessageFormatter(USERNAME_ALREADY_EXISTS, model)
+            return ErrorCodeAndMessageFormatter(USERNAME_ALREADY_EXISTS,
+                                                model.username)
 
         try:
             new_user = User(

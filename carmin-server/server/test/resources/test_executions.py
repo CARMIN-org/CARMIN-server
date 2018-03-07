@@ -1,4 +1,5 @@
 import pytest
+import copy
 import os
 import json
 from server import app
@@ -73,8 +74,12 @@ class TestExecutionsResource():
                 POST_INVALID_EXECUTION_ARRAY_FILE_NOT_EXIST).data))
         error_code_and_message = error_from_response(response)
 
+        expected_error_code_and_message = copy.deepcopy(INVALID_INPUT_FILE)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            *POST_INVALID_EXECUTION_ARRAY_FILE_NOT_EXIST.
+            input_values["file_input"])
         assert not os.listdir(user_execution_dir)
-        assert error_code_and_message == INVALID_INPUT_FILE
+        assert error_code_and_message == expected_error_code_and_message
 
     def test_post_identifier_set(self, test_config):
         response = test_config.test_client.post(

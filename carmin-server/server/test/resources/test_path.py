@@ -19,7 +19,7 @@ from server.test.fakedata.users import standard_user
 @pytest.yield_fixture()
 def test_config(tmpdir_factory):
     test_config = get_test_config()
-    test_config.db.session.add(standard_user())
+    test_config.db.session.add(standard_user(True))
     test_config.db.session.commit()
 
     root_directory = tmpdir_factory.mktemp('data')

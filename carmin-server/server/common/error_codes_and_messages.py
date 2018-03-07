@@ -1,3 +1,4 @@
+import copy
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
 
 
@@ -7,9 +8,10 @@ def ErrorCodeAndMessageMarshaller(error_code_and_message: ErrorCodeAndMessage):
 
 def ErrorCodeAndMessageFormatter(error_code_and_message: ErrorCodeAndMessage,
                                  *args):
-    error_code_and_message.error_message = error_code_and_message.error_message.format(
+    error_code_and_message_result = copy.deepcopy(error_code_and_message)
+    error_code_and_message_result.error_message = error_code_and_message_result.error_message.format(
         *args)
-    return error_code_and_message
+    return error_code_and_message_result
 
 
 GENERIC_ERROR = ErrorCodeAndMessage(0,
