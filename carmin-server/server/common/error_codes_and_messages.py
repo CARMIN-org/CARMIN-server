@@ -50,3 +50,5 @@ INVALID_INPUT_FILE = ErrorCodeAndMessage(110,
                                          "Input file '{}' does not exist.")
 INVALID_PIPELINE_IDENTIFIER = ErrorCodeAndMessage(
     115, "Invalid 'pipelineIdentifier'")
+INVALID_QUERY_PARAMETER = ErrorCodeAndMessage(
+    120, "Invalid value '{}' for query parameter '{}'.")

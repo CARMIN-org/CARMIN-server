@@ -5,7 +5,7 @@ import json
 from server import app
 from server.common.error_codes_and_messages import (
     EXECUTION_IDENTIFIER_MUST_NOT_BE_SET, INVALID_PIPELINE_IDENTIFIER,
-    INVALID_MODEL_PROVIDED, INVALID_INPUT_FILE)
+    INVALID_MODEL_PROVIDED, INVALID_INPUT_FILE, INVALID_QUERY_PARAMETER)
 from server.resources.models.pipeline import PipelineSchema
 from server.resources.models.execution import ExecutionSchema
 from server.test.fakedata.pipelines import PIPELINE_FOUR
@@ -14,6 +14,7 @@ from server.test.fakedata.executions import (
     POST_INVALID_EXECUTION_ARRAY_FILE_NOT_EXIST, POST_INVALID_IDENTIFIER_SET,
     POST_INVALID_EXECUTION_IDENTIFIER_NOT_EXIST, POST_INVALID_MODEL)
 from server.test.fakedata.users import standard_user
+from server.test.utils import load_json_data
 from server.test.utils import get_test_config, error_from_response
 
 
@@ -36,6 +37,17 @@ def test_config(tmpdir_factory):
     yield test_config
 
     test_config.db.drop_all()
+
+
+@pytest.fixture
+def number_of_executions(test_config) -> int:
+    number_of_executions = 10
+    for _ in range(number_of_executions):
+        test_config.test_client.post(
+            '/executions',
+            headers={"apiKey": standard_user().api_key},
+            data=json.dumps(ExecutionSchema().dump(POST_VALID_EXECUTION).data))
+    return number_of_executions
 
 
 class TestExecutionsResource():
@@ -106,3 +118,114 @@ class TestExecutionsResource():
             data=POST_INVALID_MODEL)
         error = error_from_response(response)
         assert error == INVALID_MODEL_PROVIDED
+
+    def test_get_without_executions(self, test_config):
+        response = test_config.test_client.get(
+            '/executions', headers={
+                "apiKey": standard_user().api_key
+            })
+        json_response = load_json_data(response)
+        executions = ExecutionSchema(many=True).load(json_response).data
+        assert not executions
+
+    def test_get_with_executions(self, test_config, number_of_executions):
+        response = test_config.test_client.get(
+            '/executions', headers={
+                "apiKey": standard_user().api_key
+            })
+        json_response = load_json_data(response)
+        executions, error = ExecutionSchema(many=True).load(json_response)
+        assert not error
+        assert len(executions) == number_of_executions
+
+    def test_get_with_offset(self, test_config, number_of_executions):
+        offset = 6
+        response = test_config.test_client.get(
+            '/executions?offset={}'.format(offset),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        json_response = load_json_data(response)
+        assert len(json_response) == number_of_executions - offset
+
+    def test_get_with_invalid_offset(self, test_config, number_of_executions):
+        offset = "invalid"
+        response = test_config.test_client.get(
+            '/executions?offset={}'.format(offset),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        error = error_from_response(response)
+
+        expected_error_code_and_message = copy.deepcopy(
+            INVALID_QUERY_PARAMETER)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            offset, 'offset')
+        assert error == expected_error_code_and_message
+
+    def test_get_with_offset_greater_than_execution_count(
+            self, test_config, number_of_executions):
+        offset = 1000
+        response = test_config.test_client.get(
+            '/executions?offset={}'.format(offset),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        json_response = load_json_data(response)
+        assert len(json_response) == 0
+
+    def test_get_with_negative_offset(self, test_config, number_of_executions):
+        offset = -10
+        response = test_config.test_client.get(
+            '/executions?offset={}'.format(offset),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        error = error_from_response(response)
+
+        expected_error_code_and_message = copy.deepcopy(
+            INVALID_QUERY_PARAMETER)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            offset, 'offset')
+        assert error == expected_error_code_and_message
+
+    def test_get_with_limit(self, test_config, number_of_executions):
+        limit = 4
+        response = test_config.test_client.get(
+            '/executions?limit={}'.format(limit),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        json_response = load_json_data(response)
+        assert len(json_response) == limit
+
+    def test_get_with_invalid_limit(self, test_config, number_of_executions):
+        limit = "invalid"
+        response = test_config.test_client.get(
+            '/executions?limit={}'.format(limit),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+        error = error_from_response(response)
+
+        expected_error_code_and_message = copy.deepcopy(
+            INVALID_QUERY_PARAMETER)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            limit, 'limit')
+        assert error == expected_error_code_and_message
+
+    def test_get_with_negative_limit(self, test_config, number_of_executions):
+        limit = -10
+        response = test_config.test_client.get(
+            '/executions?limit={}'.format(limit),
+            headers={
+                "apiKey": standard_user().api_key
+            })
+
+        error = error_from_response(response)
+
+        expected_error_code_and_message = copy.deepcopy(
+            INVALID_QUERY_PARAMETER)
+        expected_error_code_and_message.error_message = expected_error_code_and_message.error_message.format(
+            limit, 'limit')
+        assert error == expected_error_code_and_message

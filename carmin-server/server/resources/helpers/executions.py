@@ -7,9 +7,9 @@ from server.database.models.execution import Execution as ExecutionDB
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
 from server.resources.models.pipeline import Pipeline, PipelineSchema
 from server.common.error_codes_and_messages import (
-    UNAUTHORIZED, INVALID_INPUT_FILE, INVALID_PATH, EXECUTION_NOT_FOUND,
+    UNAUTHORIZED, INVALID_INPUT_FILE, INVALID_PATH, INVALID_MODEL_PROVIDED,
     INVALID_PIPELINE_IDENTIFIER, EXECUTION_IDENTIFIER_MUST_NOT_BE_SET,
-    UNEXPECTED_ERROR, ErrorCodeAndMessageFormatter)
+    INVALID_QUERY_PARAMETER, UNEXPECTED_ERROR, ErrorCodeAndMessageFormatter)
 from server.resources.models.execution import Execution
 from .path import create_directory, get_user_data_directory, is_safe_path, is_data_accessible, platform_path_exists
 
@@ -104,24 +104,19 @@ def inputs_file_path(username: str, execution_identifier: str) -> str:
         execution_identifier, INPUTS_FILENAME)
 
 
-def get_execution_as_model(username: str, identifier: str,
-                           db_session) -> (Execution, ErrorCodeAndMessage):
-    execution_db = db_session.query(ExecutionDB).filter_by(
-        identifier=identifier).first()
-
+def get_execution_as_model(username: str,
+                           execution_db) -> (Execution, ErrorCodeAndMessage):
     if not execution_db:
-        return None, EXECUTION_NOT_FOUND
-
-    inputs, errors = load_inputs(username, execution_db.identifier)
-    if errors:
-        return None, errors
-
+        return None, INVALID_MODEL_PROVIDED
+    inputs, error = load_inputs(username, execution_db.identifier)
+    if error:
+        return None, error
     dummy_exec = Execution(None, None, None)
-    execution_db_kwargs = {
+    execution_kwargs = {
         prop: execution_db.__dict__[prop]
         for prop in dummy_exec.__dict__.keys() if prop in execution_db.__dict__
     }
-    exe = Execution(input_values=inputs, **execution_db_kwargs)
+    exe = Execution(input_values=inputs, **execution_kwargs)
     return exe, None
 
 
@@ -139,3 +134,27 @@ def validate_request_model(model: dict,
             INVALID_INPUT_FILE, error)
         return False, error_code_and_message
     return True, None
+
+
+def filter_executions(executions, offset, limit):
+    if offset:
+        try:
+            offset = int(offset)
+        except ValueError:
+            return None, ErrorCodeAndMessageFormatter(INVALID_QUERY_PARAMETER,
+                                                      offset, 'offset')
+        if offset < 0:
+            return None, ErrorCodeAndMessageFormatter(INVALID_QUERY_PARAMETER,
+                                                      offset, 'offset')
+        executions = executions[offset:]
+    if limit:
+        try:
+            limit = int(limit)
+        except ValueError:
+            return None, ErrorCodeAndMessageFormatter(INVALID_QUERY_PARAMETER,
+                                                      limit, 'limit')
+        if limit < 0:
+            return None, ErrorCodeAndMessageFormatter(INVALID_QUERY_PARAMETER,
+                                                      limit, 'limit')
+        executions = executions[0:limit]
+    return executions, None
