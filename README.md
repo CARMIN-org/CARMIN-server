@@ -5,7 +5,7 @@
 
 ## Installation
 
-To run the server, execute the following command from the `carmin-server` directory:
+To run the server, execute the following command from the root directory:
 ```
 $ pip3 install .
 $ python3 -m server
@@ -21,7 +21,7 @@ $ curl http://localhost:8080/platform
 
 ### Using with Docker
 
-To run carmin-server in a Docker container, execute the following command, again from the `carmin-server` directory:
+To run carmin-server in a Docker container, execute the following command, again from the root directory:
 
 ```
 docker build -t=carmin-server .
