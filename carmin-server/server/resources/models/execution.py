@@ -33,9 +33,9 @@ class Execution():
     """
 
     def __init__(self,
-                 name: str,
-                 pipeline_identifier: str,
-                 input_values: object,
+                 name: str = None,
+                 pipeline_identifier: str = None,
+                 input_values: object = None,
                  identifier: str = None,
                  timeout: int = None,
                  status: ExecutionStatus = None,

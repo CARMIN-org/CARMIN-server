@@ -45,10 +45,12 @@ EXECUTION_IDENTIFIER_MUST_NOT_BE_SET = ErrorCodeAndMessage(
     100,
     "'executionIdentifier' must not be set. It will be assigned by the system upon execution initialization."
 )
-EXECUTION_NOT_FOUND = ErrorCodeAndMessage(105, "Execution not found.")
+EXECUTION_NOT_FOUND = ErrorCodeAndMessage(105, "Execution '{}' not found.")
 INVALID_INPUT_FILE = ErrorCodeAndMessage(110,
                                          "Input file '{}' does not exist.")
 INVALID_PIPELINE_IDENTIFIER = ErrorCodeAndMessage(
     115, "Invalid 'pipelineIdentifier'")
 INVALID_QUERY_PARAMETER = ErrorCodeAndMessage(
     120, "Invalid value '{}' for query parameter '{}'.")
+CANNOT_MODIFY_PARAMETER = ErrorCodeAndMessage(
+    125, "'{}' cannot be modified on an existing Execution.")

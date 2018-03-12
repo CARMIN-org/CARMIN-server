@@ -46,3 +46,16 @@ POST_INVALID_IDENTIFIER_SET = Execution(
     })
 
 POST_INVALID_MODEL = {"name": "invalid_execution"}
+
+PATCH_VALID_EXECUTION = {"name": "new_name", "timeout": 1024}
+
+PATCH_VALID_EXECUTION2 = {"name": "new_name"}
+
+PATCH_VALID_EXECUTION3 = {"timeout": 1024}
+
+PATCH_ILLEGAL_PARAMETER = {"status": "Finished"}
+PATCH_ILLEGAL_PARAMETER2 = {"identifier": "my_custom_identifier"}
+
+PATCH_INVALID_PARAMETER = {"timeout": "non_integer_timeout"}
+
+PATCH_NO_CHANGE_PARAMETER = {"pipelineIdentifier": "new_pipeline_identifier"}

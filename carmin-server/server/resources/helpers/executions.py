@@ -111,7 +111,7 @@ def get_execution_as_model(username: str,
     inputs, error = load_inputs(username, execution_db.identifier)
     if error:
         return None, error
-    dummy_exec = Execution(None, None, None)
+    dummy_exec = Execution()
     execution_kwargs = {
         prop: execution_db.__dict__[prop]
         for prop in dummy_exec.__dict__.keys() if prop in execution_db.__dict__

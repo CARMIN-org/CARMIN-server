@@ -9,7 +9,7 @@ from server.common.error_codes_and_messages import (
 from server.database.models.user import User, Role
 
 
-def unmarshal_request(schema, allow_none: bool = False):
+def unmarshal_request(schema, allow_none: bool = False, partial=False):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -17,16 +17,15 @@ def unmarshal_request(schema, allow_none: bool = False):
                 return func(*args, **kwargs)
             if schema:
                 body = request.get_json(force=True, silent=True)
-
-                if (body is None):
-                    if (allow_none):
+                if not body:
+                    if allow_none:
                         return func(model=body, *args, **kwargs)
                     else:
                         return ErrorCodeAndMessageMarshaller(
                             INVALID_MODEL_PROVIDED), 400
 
-                model, errors = schema.load(body)
-                if (errors):
+                model, errors = schema.load(body, partial=partial)
+                if errors:
                     invalid_model_provided_error = INVALID_MODEL_PROVIDED
                     invalid_model_provided_error.error_detail = errors
                     return ErrorCodeAndMessageMarshaller(
