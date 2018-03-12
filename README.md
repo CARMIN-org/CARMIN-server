@@ -1,14 +1,60 @@
-# CARMIN
+# CARMIN Server
 
-A common web API for remote pipeline execution:
+[![Build Status](https://travis-ci.org/louis-ver/CARMIN.svg?branch=develop)](https://travis-ci.org/louis-ver/CARMIN)
+[![Coverage Status](https://coveralls.io/repos/github/louis-ver/CARMIN/badge.svg?branch=develop)](https://coveralls.io/github/louis-ver/CARMIN?branch=develop)
 
-* [Specification and documentation](https://docs.google.com/document/d/1qVSDLWs8cLJ59sIQI1Av5EA5_yrSAWSqRDywwlu-pmI/edit?usp=sharing)
-* Implementation in SOAP: see `api.wsdl`.
-* Implementation in REST: see `carmin.yaml`.
-* [Abstract at 2015 INCF conference](http://www.frontiersin.org/10.3389/conf.fnins.2015.91.00053/event_abstract)
+## Installation
 
-Considering the REST or Richardson Maturity Model (RMM) defined by Leonard Richardson
-(please see http://martinfowler.com/articles/richardsonMaturityModel.html) the current
-implementation of the CARMIN REST API is considered as level 2 implementation.
-Considering that the HATEOAS aspect of an API can be quite helpful, to reach the next
-maturity level will be considered in the next evolutions of the CARMIN REST API.
+To run the server, execute the following command from the `carmin-server` directory:
+```
+$ pip3 install .
+$ python3 -m server
+```
+
+By default, the server will be running on port 8080.
+
+Test that the server is running by executing the following command:
+
+```
+$ curl http://localhost:8080/platform
+```
+
+### Using with Docker
+
+To run carmin-server in a Docker container, execute the following command, again from the `carmin-server` directory:
+
+```
+docker build -t=carmin-server .
+docker run -p 8080:8080 \
+		   -v $PIPELINE_DIRECTORY:/carmin-assets/pipelines \
+		   -v $DATA_DIRECTORY:/carmin-assets/data \
+		   carmin-server
+```
+
+### Important Environment Variables
+
+Before launching the server, environment variables must point to both the Pipeline directory and the Data directory. The pathname must be absolute.
+```
+$ # In a UNIX environment
+$ export PIPELINE_DIRECTORY=/path/to/pipelines
+$ export DATA_DIRECTORY=/path/to/data
+
+> # In a Windows environment
+> set PIPELINE_DIRECTORY=C:\path\to\pipelines
+> set DATA_DIRECTORY=C:\path\to\data
+```
+
+Pipelines can be organized by `study` as follows:
+```
+/path/to/data/and/pipelines
+
+├── data
+└── pipelines
+    ├── study1
+    │   ├── pipeline1.json
+    │   └── pipeline2.json
+    └── study2
+        └── pipeline3.json
+```
+
+## Usage
