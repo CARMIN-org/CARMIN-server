@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 NAME = "carmin-server"
 VERSION = "0.5.4"
 DEPS = [
-    "flask-restful", "flask-sqlalchemy", "marshmallow",
+    "flask-restful", "flask-sqlalchemy", "psycopg2-binary", "marshmallow",
     "marshmallow_enum==1.4.*", "boutiques"
 ]
 
