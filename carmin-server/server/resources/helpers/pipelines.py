@@ -2,6 +2,7 @@ import os
 import json
 from server import app
 from server.resources.models.pipeline import Pipeline, PipelineSchema
+from server.common.error_codes_and_messages import UNEXPECTED_ERROR
 
 
 def pipelines(pipeline_identifier: str = None,
@@ -20,7 +21,7 @@ def pipelines(pipeline_identifier: str = None,
                     pipeline, errors = PipelineSchema().load(
                         json.load(pipeline_json))
                     if errors:
-                        print(errors)
+                        return UNEXPECTED_ERROR
                     else:
                         response.append(pipeline)
     if pipeline_property:
