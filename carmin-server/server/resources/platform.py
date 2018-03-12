@@ -15,5 +15,5 @@ class Platform(Resource):
             platform_properties, errors = PlatformPropertiesSchema().load(
                 json.load(config_data))
             if errors:
-                print(errors)
+                return UNEXPECTED_ERROR
             return platform_properties
