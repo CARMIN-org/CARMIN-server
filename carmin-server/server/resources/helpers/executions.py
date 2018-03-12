@@ -74,14 +74,15 @@ def input_files_exist(input_values: Dict, pipeline: Pipeline,
 def get_pipeline(pipeline_identifier: str) -> Pipeline:
     pipeline_directory = app.config['PIPELINE_DIRECTORY']
     all_pipelines = [
-        f for f in os.listdir(pipeline_directory) if not f.startswith(".")
+        f.path for f in os.scandir(pipeline_directory)
+        if not f.name.startswith(".") and f.is_file()
     ]
+
     for pipeline in all_pipelines:
-        path = os.path.join(pipeline_directory, pipeline)
-        with open(path) as f:
-            pipeline = json.load(f)
-            if pipeline["identifier"] == pipeline_identifier:
-                return PipelineSchema().load(pipeline).data
+        with open(pipeline) as f:
+            pipeline_json = json.load(f)
+            if pipeline_json["identifier"] == pipeline_identifier:
+                return PipelineSchema().load(pipeline_json).data
 
 
 def load_inputs(username: str,
