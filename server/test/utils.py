@@ -1,30 +1,6 @@
 import json
-from server import app
-from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
 from flask import Response
-from server.config import TestConfig
-
-
-class TestConfigEncapsulated:
-    def __init__(self, test_client, db):
-        self.test_client = test_client
-        self.db = db
-
-
-def get_test_config():
-    app = create_app()
-    test_client = app.test_client()
-
-    db.drop_all()
-    db.create_all()
-
-    db.session = db.create_scoped_session()
-
-    return TestConfigEncapsulated(test_client, db)
-
-
-def json_request_data(data):
-    return json.dumps(data)
+from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
 
 
 def load_json_data(response):
