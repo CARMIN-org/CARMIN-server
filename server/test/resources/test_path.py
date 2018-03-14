@@ -19,7 +19,7 @@ from server.resources.path import generate_md5
 from server.test.fakedata.users import standard_user
 
 
-@pytest.yield_fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def test_config(tmpdir_factory, session):
     session.add(standard_user(True))
     session.commit()
