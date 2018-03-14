@@ -1,5 +1,6 @@
 from flask_restful import Resource, request
 from sqlalchemy.exc import IntegrityError
+from server.database import db
 from server.database.models.execution import Execution, ExecutionStatus
 from server.common.error_codes_and_messages import (
     EXECUTION_IDENTIFIER_MUST_NOT_BE_SET, INVALID_INPUT_FILE, UNEXPECTED_ERROR,
