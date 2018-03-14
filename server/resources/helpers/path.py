@@ -16,7 +16,6 @@ from server.resources.models.path_md5 import PathMD5
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageMarshaller, INVALID_PATH, PATH_EXISTS,
     INVALID_MODEL_PROVIDED, NOT_AN_ARCHIVE, INVALID_BASE_64)
-from .executions import EXECUTIONS_DIRNAME
 
 
 def is_safe_path(path: str, follow_symlinks: bool = True) -> bool:
@@ -135,3 +134,6 @@ def platform_path_exists(url_root: str, platform_path: str) -> (bool, str):
     return os.path.exists(
         os.path.join(app.config['DATA_DIRECTORY'],
                      platform_path[len(path_url):])), platform_path
+
+
+from .executions import EXECUTIONS_DIRNAME
