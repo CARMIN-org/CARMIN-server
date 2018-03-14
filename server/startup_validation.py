@@ -10,7 +10,7 @@ from werkzeug.security import generate_password_hash
 from .config import SUPPORTED_PROTOCOLS, SUPPORTED_MODULES
 from .resources.models.platform_properties import PlatformPropertiesSchema
 from .common.exceptions import MissingRequiredParameterError
-from .resources.decorators import get_db_session
+from server.database import db
 from .database.models.user import User, Role
 
 
@@ -76,14 +76,12 @@ def pipeline_and_data_directory_present():
         )
 
 
-@get_db_session
-def find_or_create_admin(**kwargs):
-    db_session = kwargs["db_session"]
-    admin = db_session.query(User).filter_by(role=Role.admin).first()
+def find_or_create_admin():
+    admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
         first_admin = User(
             username="admin",
             password=generate_password_hash("admin"),
             role=Role.admin)
-        db_session.add(first_admin)
-        db_session.commit()
+        db.session.add(first_admin)
+        db.session.commit()

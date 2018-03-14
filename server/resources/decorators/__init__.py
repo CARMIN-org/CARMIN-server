@@ -68,16 +68,7 @@ def marshal_response(schema=None):
     return decorator
 
 
-def get_db_session(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(db_session=db.create_scoped_session(), *args, **kwargs)
-
-    return wrapper
-
-
-@get_db_session
-def login_required(func, db_session):
+def login_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
 
@@ -85,7 +76,7 @@ def login_required(func, db_session):
         if (apiKey is None):
             return ErrorCodeAndMessageMarshaller(MISSING_API_KEY), 401
 
-        user = db_session.query(User).filter_by(api_key=apiKey).first()
+        user = db.session.query(User).filter_by(api_key=apiKey).first()
 
         if not user:
             return ErrorCodeAndMessageMarshaller(INVALID_API_KEY), 401
@@ -95,15 +86,14 @@ def login_required(func, db_session):
     return wrapper
 
 
-@get_db_session
-def admin_only(func, db_session):
+def admin_only(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         apiKey = request.headers.get("apiKey")
         if (apiKey is None):
             return ErrorCodeAndMessageMarshaller(MISSING_API_KEY), 401
 
-        user = db_session.query(User).filter_by(api_key=apiKey).first()
+        user = db.session.query(User).filter_by(api_key=apiKey).first()
 
         if not user:
             return ErrorCodeAndMessageMarshaller(INVALID_API_KEY), 401

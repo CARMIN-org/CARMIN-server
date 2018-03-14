@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import USERNAME_ALREADY_EXISTS
 from server.database.models.user import User, Role
-from .decorators import admin_only, unmarshal_request, marshal_response, get_db_session
+from .decorators import admin_only, unmarshal_request, marshal_response
 from server.resources.helpers.register import create_user_directory
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
 from server.common.error_codes_and_messages import (
@@ -14,11 +14,10 @@ from server.common.error_codes_and_messages import (
 
 class Register(Resource):
     @admin_only
-    @get_db_session
     @unmarshal_request(AuthenticationCredentialsSchema())
     @marshal_response()
-    def post(self, model, db_session, user):
-        already_existing_user = db_session.query(User).filter_by(
+    def post(self, model, user):
+        already_existing_user = db.session.query(User).filter_by(
             username=model.username).first()
 
         if already_existing_user:
@@ -31,13 +30,13 @@ class Register(Resource):
                 password=generate_password_hash(model.password),
                 role=Role.user)
 
-            db_session.add(new_user)
+            db.session.add(new_user)
             path, error = create_user_directory(new_user)
             if (error):
-                db_session.rollback()
+                db.session.rollback()
                 return UNEXPECTED_ERROR
 
-            db_session.commit()
+            db.session.commit()
         except IntegrityError:
-            db_session.rollback()
+            db.session.rollback()
             return ErrorCodeAndMessageFormatter(USERNAME_ALREADY_EXISTS, model)
