@@ -1,4 +1,4 @@
-from server import db
+from server.database import db
 from flask_restful import Resource
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError

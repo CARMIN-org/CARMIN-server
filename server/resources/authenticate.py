@@ -4,7 +4,7 @@ import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_restful import Resource, fields, request
 from flask import make_response, jsonify, abort
-from server import db
+from server.database import db
 from .models.authentication import Authentication, AuthenticationSchema
 from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD

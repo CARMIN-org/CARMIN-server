@@ -1,5 +1,5 @@
 import json
-from server import app, db
+from server import app
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
 from flask import Response
 from server.config import TestConfig
@@ -12,7 +12,7 @@ class TestConfigEncapsulated:
 
 
 def get_test_config():
-    app.config.from_object(TestConfig)
+    app = create_app()
     test_client = app.test_client()
 
     db.drop_all()
