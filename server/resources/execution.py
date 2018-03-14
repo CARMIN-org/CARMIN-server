@@ -1,4 +1,5 @@
 from flask_restful import Resource
+from server.database import db
 from server.database.queries.executions import get_execution
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageFormatter, EXECUTION_NOT_FOUND, INVALID_MODEL_PROVIDED,
@@ -40,8 +41,8 @@ class Execution(Resource):
                 execution_db.name = model.name
             if model.timeout:
                 execution_db.timeout = model.timeout
-            db_session.add(execution_db)
-            db_session.commit()
+            db.session.add(execution_db)
+            db.session.commit()
 
     def delete(self, execution_identifier):
         pass

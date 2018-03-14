@@ -11,7 +11,6 @@ from server.common.error_codes_and_messages import (
     INVALID_PIPELINE_IDENTIFIER, EXECUTION_IDENTIFIER_MUST_NOT_BE_SET,
     INVALID_QUERY_PARAMETER, UNEXPECTED_ERROR, ErrorCodeAndMessageFormatter)
 from server.resources.models.execution import Execution
-from .path import create_directory, get_user_data_directory, is_safe_path, is_data_accessible, platform_path_exists
 
 INPUTS_FILENAME = "inputs.json"
 EXECUTIONS_DIRNAME = "executions"
@@ -159,3 +158,6 @@ def filter_executions(executions, offset, limit):
                                                       limit, 'limit')
         executions = executions[0:limit]
     return executions, None
+
+
+from .path import create_directory, get_user_data_directory, is_safe_path, is_data_accessible, platform_path_exists
