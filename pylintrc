@@ -1,0 +1,6 @@
+[MASTER]
+
+# List of class names for which member attributes should not be checked (useful
+# for classes with dynamically set attributes). This supports the use of
+# qualified names.
+ignored-classes=scoped_session
