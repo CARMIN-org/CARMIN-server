@@ -23,7 +23,7 @@ class Authenticate(Resource):
         if not user or not check_password_hash(user.password, model.password):
             return INVALID_USERNAME_OR_PASSWORD
 
-        if (user.api_key is None):
+        if not user.api_key:
             user.api_key = generate_api_key()
             db.session.add(user)
             db.session.commit()

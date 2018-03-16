@@ -1,4 +1,5 @@
-from server.server_helper import create_app, declare_api
+from server.server_helper import create_app
+from server.api import declare_api
 from server.startup_validation import start_up
 
 app = create_app()
