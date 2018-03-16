@@ -1,5 +1,6 @@
 import pytest
-from server.server_helper import create_app, declare_api
+from server.server_helper import create_app
+from server.api import declare_api
 from server.database import db as _db
 from server.config import TestConfig
 

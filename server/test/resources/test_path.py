@@ -250,15 +250,6 @@ class TestPathResource():
         error = error_from_response(response)
         assert error == INVALID_MODEL_PROVIDED
 
-    # TODO: Uncomment when @unmarshal_request has option for allow_none
-    # @louis-ver: I refactored this test, but with the schema level validation, the INVALID_UPLOAD_TYPE will never happen. I just want to validate with you that we can remove this test.
-    # def test_put_invalid_request(self, test_client):
-    #     response = test_client.put(
-    #         '/path/{}/new_file2.txt'.format(standard_user().username),
-    #         headers={"apiKey": standard_user().api_key},
-    #         data='{"type": "Invalid File Type", "base64Content": "IL54"}')
-    #     error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-    #     assert error == INVALID_UPLOAD_TYPE
 
     def test_put_where_parent_dir_not_exist(self, test_client):
         response = test_client.put(
