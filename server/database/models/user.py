@@ -1,7 +1,7 @@
 import enum
 from flask_restful import fields
 from sqlalchemy import Column, String, Enum
-from server import db
+from server.database import db
 
 
 class Role(enum.Enum):

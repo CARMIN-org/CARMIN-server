@@ -3,7 +3,7 @@ import uuid
 import time
 from flask_restful import fields
 from sqlalchemy import Column, String, Enum, Integer, BigInteger, ForeignKey
-from server import db
+from server.database import db
 from server.resources.models.execution import ExecutionStatus
 
 
