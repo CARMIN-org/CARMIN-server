@@ -1,9 +1,13 @@
 import os
+from werkzeug.security import generate_password_hash
+from sqlalchemy.exc import IntegrityError
 from .path import create_directory, get_user_data_directory, is_safe_path
-from server.database.models.user import User
+from server.database.models.user import User, Role
 from server.resources.models.path import Path
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
-from server.common.error_codes_and_messages import UNAUTHORIZED
+from server.common.error_codes_and_messages import (
+    ErrorCodeAndMessageFormatter, UNAUTHORIZED, USERNAME_ALREADY_EXISTS,
+    UNEXPECTED_ERROR)
 
 
 def create_user_directory(user: User) -> (Path, ErrorCodeAndMessage):
@@ -13,3 +17,25 @@ def create_user_directory(user: User) -> (Path, ErrorCodeAndMessage):
         return None, UNAUTHORIZED
 
     return create_directory(user_dir_absolute_path)
+
+
+def register_user(username: str, password: str, user_role: Role,
+                  db_session) -> (bool, ErrorCodeAndMessage):
+    try:
+        new_user = User(
+            username=username,
+            password=generate_password_hash(password),
+            role=user_role)
+
+        db_session.add(new_user)
+        path, error = create_user_directory(new_user)
+        if (error):
+            db_session.rollback()
+            return False, error
+
+        db_session.commit()
+        return True, None
+    except IntegrityError:
+        db_session.rollback()
+        return False, ErrorCodeAndMessageFormatter(USERNAME_ALREADY_EXISTS,
+                                                   username)
