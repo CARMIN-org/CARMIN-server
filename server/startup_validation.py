@@ -80,9 +80,10 @@ def pipeline_and_data_directory_present():
 def find_or_create_admin():
     admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
-        result, error = register_user("admin", "admin", Role.admin, db.session)
+        result, error = register_user("admin", "admin", Role.admin, db.session,
+                                      True)
 
-        if error.error_code != PATH_EXISTS.error_code:
+        if error:
             raise EnvironmentError("Could not create first admin account.")
 
 

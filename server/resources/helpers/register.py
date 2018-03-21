@@ -10,17 +10,22 @@ from server.common.error_codes_and_messages import (
     UNEXPECTED_ERROR)
 
 
-def create_user_directory(user: User) -> (Path, ErrorCodeAndMessage):
+def create_user_directory(user: User) -> ErrorCodeAndMessage:
     user_dir_absolute_path = get_user_data_directory(user.username)
 
     if not is_safe_path(user_dir_absolute_path):
-        return None, UNAUTHORIZED
+        return UNAUTHORIZED
 
-    return create_directory(user_dir_absolute_path)
+    path, error = create_directory(user_dir_absolute_path, False)
+    return error
 
 
-def register_user(username: str, password: str, user_role: Role,
-                  db_session) -> (bool, ErrorCodeAndMessage):
+def register_user(
+        username: str,
+        password: str,
+        user_role: Role,
+        db_session,
+        ignore_directory_fail: bool = False) -> (bool, ErrorCodeAndMessage):
     try:
         new_user = User(
             username=username,
@@ -28,8 +33,8 @@ def register_user(username: str, password: str, user_role: Role,
             role=user_role)
 
         db_session.add(new_user)
-        path, error = create_user_directory(new_user)
-        if (error):
+        error = create_user_directory(new_user)
+        if error and not ignore_directory_fail:
             db_session.rollback()
             return False, error
 

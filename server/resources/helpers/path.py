@@ -90,10 +90,15 @@ def upload_archive(upload_data: UploadData,
     return path, None
 
 
-def create_directory(requested_data_path: str) -> (Path, ErrorCodeAndMessage):
+def create_directory(requested_data_path: str, path_required: bool = True
+                     ) -> (Path, ErrorCodeAndMessage):
     try:
         os.mkdir(requested_data_path)
-        return Path.object_from_pathname(requested_data_path), None
+        # path_required allows callers to use this helper function outside of request calls as Path.object_from_pathname uses the Flask request
+        if path_required:
+            return Path.object_from_pathname(requested_data_path), None
+        else:
+            return None, None
     except FileExistsError:
         return None, PATH_EXISTS
 
