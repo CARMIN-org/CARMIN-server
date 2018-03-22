@@ -12,6 +12,7 @@ from .resources.models.platform_properties import PlatformPropertiesSchema
 from .common.exceptions import MissingRequiredParameterError
 from server.database import db
 from .database.models.user import User, Role
+from server.common.error_codes_and_messages import PATH_EXISTS
 
 
 def start_up():
@@ -79,9 +80,11 @@ def pipeline_and_data_directory_present():
 def find_or_create_admin():
     admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
-        first_admin = User(
-            username="admin",
-            password=generate_password_hash("admin"),
-            role=Role.admin)
-        db.session.add(first_admin)
-        db.session.commit()
+        result, error = register_user("admin", "admin", Role.admin, db.session,
+                                      True)
+
+        if error:
+            raise EnvironmentError("Could not create first admin account.")
+
+
+from server.resources.helpers.register import register_user

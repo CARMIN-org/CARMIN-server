@@ -1,7 +1,7 @@
 # CARMIN Server
 
-[![Build Status](https://travis-ci.org/louis-ver/CARMIN.svg?branch=develop)](https://travis-ci.org/louis-ver/CARMIN)
-[![Coverage Status](https://coveralls.io/repos/github/louis-ver/CARMIN/badge.svg?branch=develop)](https://coveralls.io/github/louis-ver/CARMIN?branch=develop)
+[![Build Status](https://travis-ci.org/simon-dube/CARMIN-server.svg?branch=develop)](https://travis-ci.org/simon-dube/CARMIN-server)
+[![Coverage Status](https://coveralls.io/repos/github/simon-dube/CARMIN-server/badge.svg?branch=develop)](https://coveralls.io/github/simon-dube/CARMIN-server?branch=develop)
 
 ## Installation
 
