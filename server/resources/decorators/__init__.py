@@ -1,6 +1,6 @@
 from functools import wraps
 from flask_restful import request
-from flask import abort
+from flask import abort, g
 from server.database import db
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
 from server.common.error_codes_and_messages import (
@@ -81,6 +81,7 @@ def login_required(func):
         if not user:
             return ErrorCodeAndMessageMarshaller(INVALID_API_KEY), 401
 
+        g.username = user.username
         return func(user=user, *args, **kwargs)
 
     return wrapper

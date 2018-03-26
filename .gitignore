@@ -1,3 +1,4 @@
+*.log
 *.pyc
 .pytest_cache/*
 *.db
