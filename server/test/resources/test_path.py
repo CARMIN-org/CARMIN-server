@@ -9,7 +9,7 @@ from server.test.conftest import test_client, session
 from server.common.error_codes_and_messages import (
     MD5_ON_DIR, INVALID_PATH, UNAUTHORIZED, ACTION_REQUIRED, INVALID_ACTION,
     LIST_ACTION_ON_FILE, INVALID_MODEL_PROVIDED, PATH_EXISTS,
-    INVALID_UPLOAD_TYPE)
+    INVALID_UPLOAD_TYPE, PATH_DOES_NOT_EXIST, PATH_IS_DIRECTORY)
 from server.resources.models.path import Path, PathSchema
 from server.resources.models.path_md5 import PathMD5Schema
 from server.resources.models.upload_data import UploadData, UploadDataSchema
@@ -88,7 +88,7 @@ class TestPathResource():
                 "apiKey": standard_user().api_key
             })
         error = error_from_response(response)
-        assert error == UNAUTHORIZED
+        assert error == INVALID_PATH
 
     def test_get_no_action(self, test_client):
         response = test_client.get(
@@ -126,7 +126,7 @@ class TestPathResource():
                 "apiKey": standard_user().api_key
             })
         error = error_from_response(response)
-        assert error == INVALID_PATH
+        assert error == PATH_DOES_NOT_EXIST
 
     def test_get_content_action_with_dir(self, test_client):
         response = test_client.get(
@@ -145,7 +145,7 @@ class TestPathResource():
                 "apiKey": standard_user().api_key
             })
         error = error_from_response(response)
-        assert error == INVALID_PATH
+        assert error == PATH_DOES_NOT_EXIST
 
     def test_get_properties_action_with_file(self, test_client, file_object):
         response = test_client.get(
@@ -240,7 +240,7 @@ class TestPathResource():
                 "apiKey": standard_user().api_key
             })
         error = error_from_response(response)
-        assert error == UNAUTHORIZED
+        assert error == INVALID_PATH
 
     def test_put_with_invalid_upload_type(self, test_client):
         response = test_client.put(
@@ -249,7 +249,6 @@ class TestPathResource():
             data='{"type": "Invented", "base64Content": "ewlfkjweflk=="}')
         error = error_from_response(response)
         assert error == INVALID_MODEL_PROVIDED
-
 
     def test_put_where_parent_dir_not_exist(self, test_client):
         response = test_client.put(
@@ -309,6 +308,18 @@ class TestPathResource():
             headers={"apiKey": standard_user().api_key},
             data=json.dumps(UploadDataSchema().dump(put_dir).data))
         assert response.status_code == 400
+
+    def test_put_file_on_dir(self, test_client):
+        path = '{}/empty_dir'.format(standard_user().username)
+        put_dir = UploadData(
+            base64_content='bad_content', upload_type='File', md5='')
+        response = test_client.put(
+            '/path/{}'.format(path),
+            headers={"apiKey": standard_user().api_key},
+            data=json.dumps(UploadDataSchema().dump(put_dir).data))
+        error = error_from_response(response)
+        assert error.error_message == "Invalid path: '{}' is a directory.".format(
+            path)
 
     # tests for DELETE
     def test_delete_single_file(self, test_client):

@@ -15,49 +15,6 @@ class ExecutionStatus(enum.Enum):
     Killed = "Killed"
 
 
-class Execution():
-    """A Pipeline Execution
-
-    Attributes:
-        identifier (str, optional readonly):
-        name (str):
-        pipeline_identifier (str):
-        timeout (int, optional):
-        status (str, optional readonly):
-        input_values (object):
-        returned_files (Dict[str, List[str]]):
-        study_identifier (str):
-        error_code (int):
-        start_date (int):
-        end_date (int):
-    """
-
-    def __init__(self,
-                 name: str = None,
-                 pipeline_identifier: str = None,
-                 input_values: object = None,
-                 identifier: str = None,
-                 timeout: int = None,
-                 status: ExecutionStatus = None,
-                 returned_files: Dict[str, List[str]] = None,
-                 study_identifier: str = None,
-                 error_code: int = None,
-                 start_date: int = None,
-                 end_date: int = None):
-
-        self.identifier = identifier
-        self.name = name
-        self.pipeline_identifier = pipeline_identifier
-        self.timeout = timeout
-        self.status = status
-        self.input_values = input_values
-        self.returned_files = returned_files
-        self.study_identifier = study_identifier
-        self.error_code = error_code
-        self.start_date = start_date
-        self.end_date = end_date
-
-
 class ExecutionSchema(Schema):
     SKIP_VALUES = list([None])
 
@@ -98,3 +55,47 @@ class ExecutionSchema(Schema):
             key: value
             for key, value in data.items() if value not in self.SKIP_VALUES
         }
+
+
+class Execution():
+    """A Pipeline Execution
+
+    Attributes:
+        identifier (str, optional readonly):
+        name (str):
+        pipeline_identifier (str):
+        timeout (int, optional):
+        status (str, optional readonly):
+        input_values (object):
+        returned_files (Dict[str, List[str]]):
+        study_identifier (str):
+        error_code (int):
+        start_date (int):
+        end_date (int):
+    """
+    schema = ExecutionSchema()
+
+    def __init__(self,
+                 name: str = None,
+                 pipeline_identifier: str = None,
+                 input_values: object = None,
+                 identifier: str = None,
+                 timeout: int = None,
+                 status: ExecutionStatus = None,
+                 returned_files: Dict[str, List[str]] = None,
+                 study_identifier: str = None,
+                 error_code: int = None,
+                 start_date: int = None,
+                 end_date: int = None):
+
+        self.identifier = identifier
+        self.name = name
+        self.pipeline_identifier = pipeline_identifier
+        self.timeout = timeout
+        self.status = status
+        self.input_values = input_values
+        self.returned_files = returned_files
+        self.study_identifier = study_identifier
+        self.error_code = error_code
+        self.start_date = start_date
+        self.end_date = end_date

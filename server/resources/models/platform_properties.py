@@ -4,59 +4,6 @@ from .error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSche
 from marshmallow import Schema, fields, post_load
 
 
-class PlatformProperties():
-    """PlatformProperties
-
-    Attributes:
-        platform_name (str): The platform_name of this PlatformProperties.
-        api_error_codes_and_messages (List[ErrorCodeAndMessage]): The api_error_codes_and_messages of this PlatformProperties.
-        supported_transfer_protocols (List[str]): The supported_transfer_protocols of this PlatformProperties.
-        supported_modules (List[str]): The supported_modules of this PlatformProperties.
-        default_limit_list_executions (int): The default_limit_list_executions of this PlatformProperties.
-        email (str): The email of this PlatformProperties.
-        platform_description (str): The platform_description of this PlatformProperties.
-        min_authorized_execution_timeout (int): The min_authorized_execution_timeout of this PlatformProperties.
-        max_authorized_execution_timeout (int): The max_authorized_execution_timeout of this PlatformProperties.
-        default_execution_timeout (int): The default_execution_timeout of this PlatformProperties.
-        unsupported_methods (List[str]): The unsupported_methods of this PlatformProperties.
-        default_study (str): The default_study of this PlatformProperties.
-        supported_api_version (str): The supported_api_version of this PlatformProperties.
-        supported_pipeline_properties (List[str]): Complete list of all properties that can be used to describe the pipelines and to filter them in the "listPipelines" method
-    """
-
-    def __init__(
-            self,
-            platform_name: str = None,
-            api_error_codes_and_messages: List[ErrorCodeAndMessage] = None,
-            supported_transfer_protocols: List[str] = None,
-            supported_modules: List[str] = None,
-            default_limit_list_executions: int = None,
-            email: str = None,
-            platform_description: str = None,
-            min_authorized_execution_timeout: int = 0,
-            max_authorized_execution_timeout: int = 0,
-            default_execution_timeout: int = 0,
-            unsupported_methods: List[str] = None,
-            default_study: str = None,
-            supported_api_version: str = None,
-            supported_pipeline_properties: List[str] = None):
-
-        self.platform_name = platform_name
-        self.api_error_codes_and_messages = api_error_codes_and_messages
-        self.supported_transfer_protocols = supported_transfer_protocols
-        self.supported_modules = supported_modules
-        self.default_limit_list_executions = default_limit_list_executions
-        self.email = email
-        self.platform_description = platform_description
-        self.min_authorized_execution_timeout = min_authorized_execution_timeout
-        self.max_authorized_execution_timeout = max_authorized_execution_timeout
-        self.default_execution_timeout = default_execution_timeout
-        self.unsupported_methods = unsupported_methods
-        self.default_study = default_study
-        self.supported_api_version = supported_api_version
-        self.supported_pipeline_properties = supported_pipeline_properties
-
-
 class PlatformPropertiesSchema(Schema):
     class Meta:
         ordered = True
@@ -110,3 +57,39 @@ class PlatformPropertiesSchema(Schema):
     @post_load
     def to_model(self, data):
         return PlatformProperties(**data)
+
+
+class PlatformProperties():
+    schema = PlatformPropertiesSchema()
+
+    def __init__(
+            self,
+            platform_name: str = None,
+            api_error_codes_and_messages: List[ErrorCodeAndMessage] = None,
+            supported_transfer_protocols: List[str] = None,
+            supported_modules: List[str] = None,
+            default_limit_list_executions: int = None,
+            email: str = None,
+            platform_description: str = None,
+            min_authorized_execution_timeout: int = 0,
+            max_authorized_execution_timeout: int = 0,
+            default_execution_timeout: int = 0,
+            unsupported_methods: List[str] = None,
+            default_study: str = None,
+            supported_api_version: str = None,
+            supported_pipeline_properties: List[str] = None):
+
+        self.platform_name = platform_name
+        self.api_error_codes_and_messages = api_error_codes_and_messages
+        self.supported_transfer_protocols = supported_transfer_protocols
+        self.supported_modules = supported_modules
+        self.default_limit_list_executions = default_limit_list_executions
+        self.email = email
+        self.platform_description = platform_description
+        self.min_authorized_execution_timeout = min_authorized_execution_timeout
+        self.max_authorized_execution_timeout = max_authorized_execution_timeout
+        self.default_execution_timeout = default_execution_timeout
+        self.unsupported_methods = unsupported_methods
+        self.default_study = default_study
+        self.supported_api_version = supported_api_version
+        self.supported_pipeline_properties = supported_pipeline_properties

@@ -5,8 +5,9 @@ import zipfile
 import mimetypes
 import hashlib
 import base64
+from typing import List
 from binascii import Error
-from flask import Response, make_response
+from flask import Response, make_response, send_file
 from server import app
 from server.resources.models.upload_data import UploadData
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
@@ -14,8 +15,37 @@ from server.database.models.user import User, Role
 from server.resources.models.path import Path, PathSchema
 from server.resources.models.path_md5 import PathMD5
 from server.common.error_codes_and_messages import (
-    ErrorCodeAndMessageMarshaller, INVALID_PATH, PATH_EXISTS,
-    INVALID_MODEL_PROVIDED, NOT_AN_ARCHIVE, INVALID_BASE_64)
+    ErrorCodeAndMessageMarshaller, ErrorCodeAndMessageFormatter,
+    PATH_IS_DIRECTORY, INVALID_PATH, PATH_EXISTS, INVALID_MODEL_PROVIDED,
+    NOT_AN_ARCHIVE, INVALID_BASE_64, UNEXPECTED_ERROR)
+
+
+def get_content(complete_path: str) -> Response:
+    """Helper function for the `content` action used in the GET method."""
+    if os.path.isdir(complete_path):
+        tarball = make_tarball(complete_path)
+        response = send_file(
+            tarball, mimetype="application/gzip", as_attachment=True)
+        os.remove(tarball)
+        return response
+    mimetype, _ = mimetypes.guess_type(complete_path)
+    response = send_file(complete_path)
+    if mimetype:
+        response.mimetype = mimetype
+    return response
+
+
+def get_path_list(relative_path_to_resource: str) -> List[Path]:
+    """Helper function for the `list` action used in the GET method."""
+    result_list = []
+    absolute_path_to_resource = make_absolute(relative_path_to_resource)
+    directory_list = os.listdir(absolute_path_to_resource)
+    for f_d in directory_list:
+        if not f_d.startswith('.'):
+            result_list.append(
+                Path.object_from_pathname(
+                    os.path.join(absolute_path_to_resource, f_d)))
+    return result_list
 
 
 def is_safe_path(path: str, follow_symlinks: bool = True) -> bool:
@@ -35,9 +65,27 @@ def is_data_accessible(path: str, user: User) -> bool:
         get_user_data_directory(user.username))
 
 
+def is_safe_for_get(requested_path: str, user: User) -> bool:
+    return (is_safe_path(requested_path)
+            and is_data_accessible(requested_path, user))
+
+
+def is_safe_for_put(requested_path: str, user: User) -> bool:
+    return (is_safe_path(requested_path)
+            and is_data_accessible(requested_path, user)
+            and not is_execution_dir(requested_path, user.username)
+            and parent_dir_exists(requested_path))
+
+
+def is_safe_for_delete(requested_path: str, user: User) -> bool:
+    return (is_safe_for_put(requested_path, user)
+            and not requested_path == get_user_data_directory(user.username))
+
+
 def is_execution_dir(path: str, username: str) -> bool:
     user_execution_dir = os.path.join(
         get_user_data_directory(username), EXECUTIONS_DIRNAME)
+
     return os.path.realpath(path).startswith(user_execution_dir)
 
 
@@ -45,8 +93,10 @@ def get_user_data_directory(username: str) -> str:
     return os.path.join(app.config['DATA_DIRECTORY'], username)
 
 
-def is_safe_for_delete(requested_path: str, username: str) -> bool:
-    return not requested_path == get_user_data_directory(username)
+def make_absolute(relative_path: str) -> str:
+    data_path = app.config['DATA_DIRECTORY']
+
+    return os.path.normpath(os.path.join(data_path, relative_path))
 
 
 def upload_file(upload_data: UploadData,
@@ -54,12 +104,12 @@ def upload_file(upload_data: UploadData,
     try:
         raw_content = base64.decodebytes(upload_data.base64_content.encode())
     except Error as e:
-        error_code_and_message = INVALID_BASE_64
-        error_code_and_message.error_message = INVALID_BASE_64.error_message.format(
-            e)
-        return None, error_code_and_message
-    with open(requested_file_path, 'wb') as f:
-        f.write(raw_content)
+        return None, ErrorCodeAndMessageFormatter(INVALID_BASE_64, e)
+    try:
+        with open(requested_file_path, 'wb') as f:
+            f.write(raw_content)
+    except OSError:
+        return None, UNEXPECTED_ERROR
     path = Path.object_from_pathname(requested_file_path)
     return path, None
 
@@ -69,22 +119,19 @@ def upload_archive(upload_data: UploadData,
     try:
         raw_content = base64.decodebytes(upload_data.base64_content.encode())
     except Error as e:
-        error_code_and_message = INVALID_BASE_64
-        error_code_and_message.error_message = INVALID_BASE_64.error_message.format(
-            e)
-        return None, error_code_and_message
+        return None, ErrorCodeAndMessageFormatter(INVALID_BASE_64, e)
     file_name = '{}.zip'.format(requested_dir_path)
 
-    with open(file_name, 'wb') as f:
-        f.write(raw_content)
+    try:
+        with open(file_name, 'wb') as f:
+            f.write(raw_content)
+    except OSError:
+        return None, UNEXPECTED_ERROR
     try:
         with zipfile.ZipFile(file_name, mode='r') as zf:
             zf.extractall(path=requested_dir_path)
     except zipfile.BadZipFile as e:
-        error_code_and_message = NOT_AN_ARCHIVE
-        error_code_and_message.error_message = NOT_AN_ARCHIVE.error_message.format(
-            e)
-        return None, error_code_and_message
+        return None, ErrorCodeAndMessageFormatter(NOT_AN_ARCHIVE, e)
     os.remove(file_name)
     path = Path.object_from_pathname(requested_dir_path)
     return path, None

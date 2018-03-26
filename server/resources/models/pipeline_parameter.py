@@ -3,26 +3,6 @@ from marshmallow import Schema, fields, post_load, post_dump
 PARAMETER_TYPES = ["File", "String", "Boolean", "Int64", "Double", "List"]
 
 
-class PipelineParameter():
-    def __init__(self,
-                 name: str = None,
-                 parameter_type: str = None,
-                 is_optional: bool = None,
-                 is_returned_value: bool = None,
-                 default_value: str = None,
-                 description: str = None):
-
-        self.name = name
-        self.parameter_type = parameter_type
-        self.is_optional = is_optional
-        self.is_returned_value = is_returned_value
-        self.default_value = default_value
-        self.description = description
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-
 class PipelineParameterSchema(Schema):
     SKIP_VALUES = list([None])
 
@@ -56,3 +36,25 @@ class PipelineParameterSchema(Schema):
             key: value
             for key, value in data.items() if value not in self.SKIP_VALUES
         }
+
+
+class PipelineParameter():
+    schema = PipelineParameterSchema()
+
+    def __init__(self,
+                 name: str = None,
+                 parameter_type: str = None,
+                 is_optional: bool = None,
+                 is_returned_value: bool = None,
+                 default_value: str = None,
+                 description: str = None):
+
+        self.name = name
+        self.parameter_type = parameter_type
+        self.is_optional = is_optional
+        self.is_returned_value = is_returned_value
+        self.default_value = default_value
+        self.description = description
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

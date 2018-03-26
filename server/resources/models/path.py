@@ -6,81 +6,6 @@ from flask_restful import request
 from marshmallow import Schema, fields, post_load, post_dump
 
 
-class Path():
-    """Path represents a filesystem resource (file or directory).
-
-    Attributes:
-        platform_path (str): Pathname, relative to the root data directory.
-        last_modification_date (int): Date of last modification, in seconds
-        since the Epoch (UNIX timestamp).
-        is_directory (bool): True if the path represents a directory.
-        size (int): For a file, size in bytes. For a directory, sum of all the
-        sizes of the files contained in the directory (recursively).
-        execution_id (str): ID of the execution that produced the Path.
-        mime_type (str): MIME type based on RFC 6838.
-    """
-
-    def __init__(self,
-                 platform_path: str,
-                 last_modification_date: int,
-                 is_directory: bool,
-                 size: int = None,
-                 execution_id: str = None,
-                 mime_type: str = None):
-        self.platform_path = platform_path
-        self.last_modification_date = last_modification_date
-        self.is_directory = is_directory
-        self.size = size
-        self.execution_id = execution_id
-        self.mime_type = mime_type
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-    @classmethod
-    def object_from_pathname(cls, absolute_path_to_resource: str):
-        """object_from_pathname takes the path of the platform data root directory
-        as its first argument, and the path of the requested resource
-        relative to the root directory as second argument. It then returns a
-        Path object based on the associated file or directory.
-        """
-
-        is_directory = os.path.isdir(absolute_path_to_resource)
-
-        # TODO: Add execution_id to Path object
-
-        rel_path = PurePath(
-            os.path.relpath(absolute_path_to_resource,
-                            app.config['DATA_DIRECTORY'])).as_posix()
-
-        return Path(
-            platform_path='{}path/{}'.format(request.url_root, rel_path),
-            last_modification_date=os.path.getmtime(absolute_path_to_resource),
-            is_directory=os.path.isdir(absolute_path_to_resource),
-            size=Path.get_path_size(absolute_path_to_resource, is_directory),
-            mime_type=mimetypes.guess_type(absolute_path_to_resource)[0])
-
-    @classmethod
-    def get_path_size(cls, absolute_path: str, is_dir: bool) -> int:
-        """get_path_size returns the size of the resource.
-
-        Attributes:
-            absolute_path (str): Absolute path to the resource.
-            is_dir (bool): True if the resource is a directory.
-        Returns:
-            (int): Size of the resource.
-        """
-        size = 0
-        if is_dir:
-            for dirpath, _, filenames in os.walk(absolute_path):
-                for f in filenames:
-                    fp = os.path.join(dirpath, f)
-                    size += os.path.getsize(fp)
-        else:
-            size = os.path.getsize(absolute_path)
-        return size
-
-
 class PathSchema(Schema):
     SKIP_VALUES = set([None])
 
@@ -112,3 +37,83 @@ class PathSchema(Schema):
             key: value
             for key, value in data.items() if value not in self.SKIP_VALUES
         }
+
+
+class Path():
+    """Path represents a filesystem resource (file or directory).
+
+    Attributes:
+        platform_path (str): Pathname, relative to the root data directory.
+        last_modification_date (int): Date of last modification, in seconds
+        since the Epoch (UNIX timestamp).
+        is_directory (bool): True if the path represents a directory.
+        size (int): For a file, size in bytes. For a directory, sum of all the
+        sizes of the files contained in the directory (recursively).
+        execution_id (str): ID of the execution that produced the Path.
+        mime_type (str): MIME type based on RFC 6838.
+    """
+    schema = PathSchema()
+
+    def __init__(self,
+                 platform_path: str,
+                 last_modification_date: int,
+                 is_directory: bool,
+                 size: int = None,
+                 execution_id: str = None,
+                 mime_type: str = None):
+        self.platform_path = platform_path
+        self.last_modification_date = last_modification_date
+        self.is_directory = is_directory
+        self.size = size
+        self.execution_id = execution_id
+        self.mime_type = mime_type
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    @classmethod
+    def object_from_pathname(cls, absolute_path_to_resource: str):
+        """object_from_pathname takes the path of the platform data root directory
+        as its first argument, and the path of the requested resource
+        relative to the root directory as second argument. It then returns a
+        Path object based on the associated file or directory.
+        """
+
+        is_directory = os.path.isdir(absolute_path_to_resource)
+        mime_type = None
+
+        if not is_directory:
+            mime_type, _ = mimetypes.guess_type(absolute_path_to_resource)
+
+        # TODO: Add execution_id to Path object
+
+        rel_path = PurePath(
+            os.path.relpath(absolute_path_to_resource,
+                            app.config['DATA_DIRECTORY'])).as_posix()
+
+        return Path(
+            platform_path='{}path/{}'.format(request.url_root, rel_path),
+            last_modification_date=os.path.getmtime(absolute_path_to_resource),
+            is_directory=os.path.isdir(absolute_path_to_resource),
+            size=Path.get_path_size(absolute_path_to_resource, is_directory),
+            mime_type=mime_type)
+
+    @classmethod
+    def get_path_size(cls, absolute_path: str, is_dir: bool) -> int:
+        """get_path_size returns the size of the resource.
+
+        Attributes:
+            absolute_path (str): Absolute path to the resource.
+            is_dir (bool): True if the resource is a directory.
+        Returns:
+            (int): Size of the resource.
+        """
+        size = 0
+        if is_dir:
+            for dirpath, _, filenames in os.walk(absolute_path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    size += os.path.getsize(fp)
+        else:
+            size = os.path.getsize(absolute_path)
+        return size

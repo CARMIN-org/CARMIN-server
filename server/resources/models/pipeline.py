@@ -6,30 +6,6 @@ from .pipeline_parameter import PipelineParameterSchema, PipelineParameter
 from marshmallow import Schema, fields, post_load, post_dump
 
 
-class Pipeline():
-    def __init__(self,
-                 identifier: str = None,
-                 name: str = None,
-                 version: str = None,
-                 description: str = None,
-                 can_execute: bool = None,
-                 parameters: List[PipelineParameter] = None,
-                 properties: object = None,
-                 error_codes_and_messages: List[ErrorCodeAndMessage] = None):
-
-        self.identifier = identifier
-        self.name = name
-        self.version = version
-        self.description = description
-        self.can_execute = can_execute
-        self.parameters = parameters
-        self.properties = properties
-        self.error_codes_and_messages = error_codes_and_messages
-
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
-
-
 class PipelineSchema(Schema):
     SKIP_VALUES = list([None])
 
@@ -62,3 +38,29 @@ class PipelineSchema(Schema):
             key: value
             for key, value in data.items() if value not in self.SKIP_VALUES
         }
+
+
+class Pipeline():
+    schema = PipelineSchema()
+
+    def __init__(self,
+                 identifier: str = None,
+                 name: str = None,
+                 version: str = None,
+                 description: str = None,
+                 can_execute: bool = None,
+                 parameters: List[PipelineParameter] = None,
+                 properties: object = None,
+                 error_codes_and_messages: List[ErrorCodeAndMessage] = None):
+
+        self.identifier = identifier
+        self.name = name
+        self.version = version
+        self.description = description
+        self.can_execute = can_execute
+        self.parameters = parameters
+        self.properties = properties
+        self.error_codes_and_messages = error_codes_and_messages
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
