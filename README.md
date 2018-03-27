@@ -8,6 +8,7 @@ CARMIN-server is a lightweight server implementation of the [CARMIN API](https:/
 ## Table of Contents
 
 - [Installation](#installation)
+  - [Database](#database)
   - [Installing Locally](#installing-locally)
   - [Installing with Docker](#installing-with-docker)
 - [Usage](#usage)
@@ -30,6 +31,17 @@ $ export DATA_DIRECTORY=/path/to/data
 > set PIPELINE_DIRECTORY=C:\path\to\pipelines
 > set DATA_DIRECTORY=C:\path\to\data
 ```
+
+For now, `CARMIN-server` only supports boutiques descriptors for pipelines. Your boutiques descriptors
+must be placed inside a `boutiques` directory, as such:
+```
+└── pipelines
+    └── boutiques
+        ├── pipeline_descriptor_1.json
+        └── pipeline_descriptor_2.json
+```
+
+### Database
 
 By default, `CARMIN-server` uses a lightweight `sqlite` database that does not require any setup. `CARMIN-server` also natively supports a `postgres` database. If you'd like to use an external `postgres` database, simply set a `$DATABASE_URL` environment variable to point to the production database URL.
 ```bash
