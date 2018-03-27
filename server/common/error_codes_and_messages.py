@@ -1,4 +1,6 @@
 import copy
+import sys
+from typing import List
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
 
 
@@ -14,13 +16,21 @@ def ErrorCodeAndMessageFormatter(error_code_and_message: ErrorCodeAndMessage,
     return error_code_and_message_result
 
 
+def errors_as_list() -> List:
+    errors = [
+        getattr(sys.modules[__name__], e) for e in dir(sys.modules[__name__])
+    ]
+    return list(filter(lambda v: isinstance(v, ErrorCodeAndMessage), errors))
+
+
 GENERIC_ERROR = ErrorCodeAndMessage(0,
                                     "Something went wrong. Please try again.")
 UNEXPECTED_ERROR = ErrorCodeAndMessage(
     1, "An unexpected error occured. Please contact the system administrator.")
 INVALID_REQUEST = ErrorCodeAndMessage(2, "Invalid Request.")
 INVALID_MODEL_PROVIDED = ErrorCodeAndMessage(10, "Invalid model provided")
-MODEL_DUMPING_ERROR = ErrorCodeAndMessage(15)
+MODEL_DUMPING_ERROR = ErrorCodeAndMessage(
+    15, "Server error while dumping model of type {}")
 MISSING_API_KEY = ErrorCodeAndMessage(20, "Missing HTTP header field apiKey")
 INVALID_API_KEY = ErrorCodeAndMessage(25, "Invalid apiKey")
 INVALID_USERNAME_OR_PASSWORD = ErrorCodeAndMessage(

@@ -17,16 +17,6 @@ class AuthenticationCredentialsSchema(Schema):
 
 
 class AuthenticationCredentials():
-    """AuthenticationCredentials
-
-    Args:
-        username (str):
-        password (str):
-
-    Attributes:
-        username (str):
-        password (str):
-    """
     schema = AuthenticationCredentialsSchema()
 
     def __init__(self, username: str = None, password: str = None):

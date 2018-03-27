@@ -1,21 +1,19 @@
-"""
-CARMIN Setup
-"""
 from setuptools import setup, find_packages
 
 NAME = "carmin-server"
-VERSION = "0.5.4"
+VERSION = "0.1"
 DEPS = [
-    "flask-restful", "flask-sqlalchemy", "psycopg2-binary", "marshmallow",
-    "marshmallow_enum==1.4.*", "boutiques", "blinker"
+    "flask-restful>=0.3.6,<1.0", "flask-sqlalchemy>-2.3.2,<3.0",
+    "psycopg2-binary>=2.7.4,<3.0", "marshmallow>=2.15.0,<3.0",
+    "marshmallow_enum>=1.4.1,<2.0", "boutiques>=0.5.6,<1.0",
+    "blinker>=1.4,<2.0"
 ]
 
 setup(
     name=NAME,
     version=VERSION,
-    description=
-    "REST API for exchanging data and remotely calling pipelines on CBrain",
-    url="https://github.com/fli-iam/CARMIN",
+    description="Server for exchanging data and remotely calling pipelines",
+    url="https://github.com/CARMIN-org/CARMIN-server",
     author="CARMIN",
     author_email="carmin@googlegroups.com",
     classifiers=[

@@ -14,6 +14,8 @@ CARMIN-server is a lightweight server implementation of the [CARMIN API](https:/
   - [Authentication](#authentication)
   - [Uploading Data to the Server](#uploading-data-to-the-server)
   - [Getting Data from the Server](#getting-data-from-the-server)
+  - [Adding a Pipeline](#adding-a-pipeline)
+  - [Creating and Launching an Execution](#creating-and-launching-an-execution)
 - [CARMIN API Specification](#carmin-api-specification)
 
 ## Installation
@@ -42,7 +44,7 @@ $ pip install .
 $ python -m server
 # If you are getting exceptions when running pip install, make sure that your
 # virtualenv is configured.
-# You can also run the command with sudo, although this is not recommended.
+# You can also run the command with the --user flag.
 ```
 
 By default, the server will be running on port 8080.
@@ -73,9 +75,7 @@ You can get your `apiKey` by authenticating into the system:
 
 ### Authentication
 ```bash
-## /authenticate
 curl -X "POST" "http://localhost:8080/authenticate" \
-     -H 'Content-Type: application/json; charset=utf-8' \
      -d $'{
   "username": "admin",
   "password": "admin"
@@ -99,14 +99,12 @@ In subsequent requests, all we have to do is include the `apiKey` in the headers
 Let's add some data to the server with the `PUT /path/{completePath}` method:
 
 ```bash
-## /path/{completePath}
 curl -X "PUT" "http://localhost:8080/path/admin/hello_world.txt" \
-     -H 'apiKey: [secret_api_key]' \
-     -H 'Content-Type: application/json; charset=utf-8' \
+     -H 'apiKey: [secret-api-key]' \
      -d $'{
   "type": "File",
   "base64Content": "aGVsbG8gd29ybGQK"
-}'## /path/{completePath}
+}'
 ```
 
 The server should reply with a `201: Created` code, indicating that the resource was successfully
@@ -117,9 +115,8 @@ uploaded to the server.
 Now we can query the server to see if our file really exists:
 
 ```bash
-## /path/{completePath}
 curl "http://localhost:8080/path/admin/hello_world.txt?action=properties" \
-     -H 'apiKey: [secret_api_key]'
+     -H 'apiKey: [secret-api-key]'
 ```
 
 The server should return a `Path` object, which describes the resource that we uploaded:
@@ -133,6 +130,184 @@ The server should return a `Path` object, which describes the resource that we u
   "mimeType": "text/plain"
 }
 ```
+
+To see what the file contains, we can issue the same request, but replace the action
+with `content`:
+
+```bash
+curl "http://localhost:8080/path/admin/hello_world.txt?action=content" \
+     -H 'apiKey: [secret-api-key]'
+```
+
+### Adding a pipeline
+
+Without pipelines to execute, the server is not very useful. Let's change that.
+
+Pipelines can be added to `CARMIN-server` simply by adding them to the directory at `PIPELINE_DIRECTORY`.
+`CARMIN-server` supports [the boutiques schema](https://github.com/boutiques/boutiques) for its descriptors.
+
+Thankfully, we have one handy to help you test out your server. `output.json` simply takes a file,
+and copies the contents of the file to another file, just like the `cp` UNIX command.
+
+Add this descriptor file in `$PIPELINE_DIRECTORY/boutiques`:
+```json
+{
+    "command-line": "output.sh [INPUT_FILE] [OUTPUT_FILE]",
+    "container-image": {
+        "image": "boutiques/examples",
+        "type": "docker"
+    },
+    "description": "A simple script to test output files",
+    "error-codes": [
+        {
+            "code": 2,
+            "description": "File does not exist."
+        }
+    ],
+    "inputs": [
+        {
+            "id": "input_file",
+            "name": "Input file",
+            "optional": false,
+            "type": "File",
+            "value-key": "[INPUT_FILE]"
+        }
+    ],
+    "invocation-schema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "additionalProperties": false,
+        "dependencies": {},
+        "description": "Invocation schema for output.",
+        "properties": {
+            "input_file": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "input_file"
+        ],
+        "title": "output.invocationSchema",
+        "type": "object"
+    },
+    "name": "output",
+    "output-files": [
+        {
+            "id": "output_file",
+            "name": "Output file",
+            "path-template": "[INPUT_FILE]-processed.log",
+            "path-template-stripped-extensions": [
+                ".txt",
+                ".mnc",
+                ".cpp",
+                ".m",
+                ".j"
+            ],
+            "value-key": "[OUTPUT_FILE]"
+        }
+    ],
+    "schema-version": "0.5",
+    "tool-version": "1.0"
+}
+
+```
+
+You will need to restart the server for the translation from Boutiques to CARMIN to happen.
+
+Once that's done, issue a `GET /pipelines` request:
+
+```bash
+curl "http://localhost:8080/pipelines" \
+     -H 'apikey: [secret-api-key]'
+
+```
+
+We should see `output.json`, translated in CARMIN format:
+```json
+[
+  {
+    "identifier": "[pipeline-identifier]",
+    "name": "output",
+    "version": "1.0",
+    "description": "A simple script to test output files",
+    "canExecute": true,
+    "parameters": [
+      {
+        "id": "input_file",
+        "name": "Input file",
+        "type": "File",
+        "isOptional": false,
+        "isReturnedValue": false
+      },
+      {
+        "id": "output_file",
+        "name": "Output file",
+        "type": "File",
+        "isOptional": false,
+        "isReturnedValue": true
+      }
+    ],
+    "properties": {
+      "boutiques": true
+    },
+    "errorCodesAndMessages": [
+      {
+        "errorCode": 2,
+        "errorMessage": "File does not exist."
+      }
+    ]
+  }
+]
+```
+
+### Creating and Launching an Execution
+
+We'd like to remotely execute this pipeline. To do this, we simply need to create an
+execution, then launch it.
+
+To create an execution, issue a `POST /executions` request, containing your input values:
+
+```bash
+curl -X "POST" "http://localhost:8080/executions" \
+     -H 'apiKey: [secret-api-key]' \
+     -d $'{
+  "name": "my_first_execution",
+  "pipelineIdentifier": "[pipeline-identifier]",
+  "inputValues": {
+    "input_file": "http://localhost:8080/path/admin/hello_world.txt",
+  }
+}'
+
+```
+
+The server will then return a message, saying that the Execution was successfully created:
+
+```
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 256
+Server: Werkzeug/0.14.1 Python/3.6.4
+Date: Tue, 27 Mar 2018 02:21:33 GMT
+
+{
+  "identifier": "[execution-identifier]",
+  "name": "my_first_execution",
+  "pipelineIdentifier": "[pipeline-identifier]",
+  "status": "Initializing",
+  "inputValues": {
+    "input_file": "http://localhost:8080/path/admin/hello_world.txt"
+  }
+}
+```
+
+We're ready to launch the execution:
+
+```bash
+curl -X "PUT" "http://localhost:8080/executions/[execution-identifier]/play" \
+     -H 'apikey: [secret-api-key]' \
+```
+
+And that's it! The execution has been launched. To see the results of an execution,
+simply look in `http://localhost:8080/path/admin/executions/[execution-identifier]`.
 
 ## CARMIN API Specification
 

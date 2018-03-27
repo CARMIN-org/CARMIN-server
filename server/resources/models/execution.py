@@ -58,21 +58,6 @@ class ExecutionSchema(Schema):
 
 
 class Execution():
-    """A Pipeline Execution
-
-    Attributes:
-        identifier (str, optional readonly):
-        name (str):
-        pipeline_identifier (str):
-        timeout (int, optional):
-        status (str, optional readonly):
-        input_values (object):
-        returned_files (Dict[str, List[str]]):
-        study_identifier (str):
-        error_code (int):
-        start_date (int):
-        end_date (int):
-    """
     schema = ExecutionSchema()
 
     def __init__(self,

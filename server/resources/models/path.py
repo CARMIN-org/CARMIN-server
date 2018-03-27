@@ -43,7 +43,7 @@ class Path():
     """Path represents a filesystem resource (file or directory).
 
     Attributes:
-        platform_path (str): Pathname, relative to the root data directory.
+        platform_path (str): The url where the Path can be found.
         last_modification_date (int): Date of last modification, in seconds
         since the Epoch (UNIX timestamp).
         is_directory (bool): True if the path represents a directory.

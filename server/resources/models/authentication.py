@@ -16,12 +16,6 @@ class AuthenticationSchema(Schema):
 
 
 class Authentication():
-    """Authentication contains an HTTP Header name along with its value.
-
-    Attributes:
-        http_header (str): The HTTP Header name.
-        http_header_value (str): The associated HTTP Header value.
-    """
     schema = AuthenticationSchema()
 
     def __init__(self, http_header: str = None, http_header_value: str = None):

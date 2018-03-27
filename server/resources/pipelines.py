@@ -1,10 +1,9 @@
 import os
-import json
 from flask_restful import Resource, request
-from .models.pipeline import Pipeline, PipelineSchema
+from server.common.error_codes_and_messages import MISSING_PIPELINE_PROPERTY
+from .models.pipeline import PipelineSchema
 from .decorators import marshal_response
 from .helpers.pipelines import pipelines
-from server.common.error_codes_and_messages import MISSING_PIPELINE_PROPERTY
 
 
 class Pipelines(Resource):
@@ -14,7 +13,7 @@ class Pipelines(Resource):
         pipeline_property = request.args.get('property')
         property_value = request.args.get('propertyValue')
 
-        if (property_value and not pipeline_property):
+        if property_value and not pipeline_property:
             return MISSING_PIPELINE_PROPERTY
 
         return pipelines(None, study_identifier, pipeline_property,

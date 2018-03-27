@@ -1,10 +1,11 @@
 from typing import List
+from marshmallow import Schema, fields, post_load, post_dump
 from .error_code_and_message import ErrorCodeAndMessage, ErrorCodeAndMessageSchema
-
-from marshmallow import Schema, fields, post_load
 
 
 class PlatformPropertiesSchema(Schema):
+    SKIP_VALUES = list([None])
+
     class Meta:
         ordered = True
 
@@ -57,6 +58,13 @@ class PlatformPropertiesSchema(Schema):
     @post_load
     def to_model(self, data):
         return PlatformProperties(**data)
+
+    @post_dump
+    def remove_skip_values(self, data):
+        return {
+            key: value
+            for key, value in data.items() if value not in self.SKIP_VALUES
+        }
 
 
 class PlatformProperties():

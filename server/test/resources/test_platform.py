@@ -2,7 +2,6 @@ from typing import Dict
 import pytest
 import copy
 from server.startup_validation import properties_validation
-from server.common.exceptions import MissingRequiredParameterError
 
 
 @pytest.fixture
@@ -42,13 +41,8 @@ def config_data() -> Dict:
 
 def test_missing_required_parameter(config_data):
     del config_data['supportedAPIVersion']
-    with pytest.raises(MissingRequiredParameterError):
+    with pytest.raises(EnvironmentError):
         properties_validation(config_data)
-
-
-def test_empty_config_object():
-    with pytest.raises(MissingRequiredParameterError):
-        properties_validation({})
 
 
 def test_invalid_protocol(config_data):
@@ -81,5 +75,5 @@ def test_minimal_config():
 
 def test_https_support(config_data):
     config_data['supportedTransferProtocols'] = ["http"]
-    with pytest.raises(MissingRequiredParameterError):
+    with pytest.raises(EnvironmentError):
         properties_validation(config_data)

@@ -1,15 +1,12 @@
 import os
 import json
 import shutil
-import mimetypes
-from typing import List
 from flask_restful import Resource, request
-from flask import send_file, Response, make_response
+from flask import Response, make_response
 from server.common.utils import marshal
 from server.common.error_codes_and_messages import (
-    ErrorCodeAndMessageMarshaller, ErrorCodeAndMessageFormatter, UNAUTHORIZED,
-    INVALID_PATH, INVALID_ACTION, MD5_ON_DIR, LIST_ACTION_ON_FILE,
-    INVALID_UPLOAD_TYPE, ACTION_REQUIRED, UNEXPECTED_ERROR,
+    ErrorCodeAndMessageFormatter, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION,
+    MD5_ON_DIR, LIST_ACTION_ON_FILE, ACTION_REQUIRED, UNEXPECTED_ERROR,
     PATH_DOES_NOT_EXIST, PATH_IS_DIRECTORY, INVALID_REQUEST)
 from .models.upload_data import UploadDataSchema
 from .models.boolean_response import BooleanResponse
@@ -17,9 +14,9 @@ from .models.path import Path as PathModel
 from .models.path import PathSchema
 from .decorators import login_required, unmarshal_request
 from .helpers.path import (is_safe_for_delete, upload_file, upload_archive,
-                           create_directory, generate_md5, make_tarball,
-                           is_safe_for_put, is_safe_for_get, make_absolute,
-                           get_content, get_path_list)
+                           create_directory, generate_md5, is_safe_for_put,
+                           is_safe_for_get, make_absolute, get_content,
+                           get_path_list)
 
 
 class Path(Resource):

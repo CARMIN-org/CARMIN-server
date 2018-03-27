@@ -2,8 +2,7 @@ from flask_restful import Resource
 from server.database import db
 from server.database.queries.executions import get_execution
 from server.common.error_codes_and_messages import (
-    ErrorCodeAndMessageFormatter, EXECUTION_NOT_FOUND, INVALID_MODEL_PROVIDED,
-    CANNOT_MODIFY_PARAMETER)
+    ErrorCodeAndMessageFormatter, EXECUTION_NOT_FOUND, CANNOT_MODIFY_PARAMETER)
 from server.resources.models.execution import ExecutionSchema
 from server.resources.helpers.executions import get_execution_as_model
 from server.resources.decorators import (login_required, marshal_response,

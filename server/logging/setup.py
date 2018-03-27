@@ -23,16 +23,16 @@ got_request_exception.connect(log_exception, app)
 @app.after_request
 def log_response(response):
     logger = logging.getLogger('request-response')
-    client_error = re.compile("^4").match(response.status)
+    user_error = re.compile("^4").match(response.status)
     server_error = re.compile("^5").match(response.status)
 
-    if client_error or server_error:
+    if user_error or server_error:
         error = error_from_response(response)
         request_content = request.get_json()
-        if request_content.get('password'):
+        if request_content and request_content.get('password'):
             request_content['password'] = '[password]'
 
-        if client_error:
+        if user_error:
             msg = '\n  User: - IP: {}, username: {}\n  Method - {} {}\n  Request - {}\n  Response - {}: {}'.format(
                 request.remote_addr,
                 g.get('username'), request.method, request.path,

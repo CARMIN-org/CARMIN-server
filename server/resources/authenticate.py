@@ -1,15 +1,11 @@
-import random
-import sys
-import json
-from werkzeug.security import generate_password_hash, check_password_hash
-from flask_restful import Resource, fields, request
-from flask import make_response, jsonify, abort
+from werkzeug.security import check_password_hash
+from flask_restful import Resource
 from server.database import db
-from .models.authentication import Authentication, AuthenticationSchema
-from .models.authentication_credentials import AuthenticationCredentials, AuthenticationCredentialsSchema
 from server.common.error_codes_and_messages import INVALID_USERNAME_OR_PASSWORD
 from server.database.models.user import User
-from .decorators import unmarshal_request, marshal_response, login_required
+from .models.authentication import Authentication, AuthenticationSchema
+from .models.authentication_credentials import AuthenticationCredentialsSchema
+from .decorators import unmarshal_request, marshal_response
 from .helpers.authenticate import generate_api_key
 
 
