@@ -1,4 +1,10 @@
-FROM python:3.6.4
+FROM python:3.6.4-alpine
+RUN apk update
+RUN apk add docker
+RUN apk add postgresql-dev
+RUN apk add gcc
+RUN apk add python3-dev
+RUN apk add musl-dev
 
 RUN mkdir -p /carmin-server
 WORKDIR /carmin-server

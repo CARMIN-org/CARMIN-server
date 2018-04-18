@@ -33,15 +33,20 @@ def log_response(response):
             request_content['password'] = '[password]'
 
         if user_error:
-            msg = '\n  User: - IP: {}, username: {}\n  Method - {} {}\n  Request - {}\n  Response - {}: {}'.format(
-                request.remote_addr,
-                g.get('username'), request.method, request.path,
-                request.get_json(), error.error_code, error.error_message)
+            if error:
+                msg = '\n  User: - IP: {}, username: {}\n  Method - {} {}\n  Request - {}\n  Response - {}: {}'.format(
+                    request.remote_addr,
+                    g.get('username'), request.method, request.path,
+                    request.get_json(), error.error_code, error.error_message)
+            else:
+                msg = '\n  User: - IP: {}, username: {}\n  Method - {} {}\n  Request - {}\n  Response - {}'.format(
+                    request.remote_addr, g.get('username'), request.method,
+                    request.path, request.get_json(), response.status)
             logger.warning(msg)
         elif server_error:
             msg = '\n  User: - {}\n  Method - {} {}\n  Request - {}\n  Response - {}'.format(
                 request.remote_addr, request.method, request.path,
-                request.get_json(), response.data)
+                request.get_json(), response.get_data())
             logger.error(msg)
     else:
         msg = '{} - {} - {}'.format(request.remote_addr, request.path,

@@ -10,8 +10,9 @@ def create_app(config=None):
     else:
         app.config.from_object(Config)
 
-    db.init_app(app)
-    db.app = app
-    init_db(db)
+    if app.config.get("SQLALCHEMY_DATABASE_URI"):
+        db.init_app(app)
+        db.app = app
+        init_db(db)
 
     return app

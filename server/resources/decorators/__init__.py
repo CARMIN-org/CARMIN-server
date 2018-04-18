@@ -4,7 +4,8 @@ from flask import abort, g
 from server.database import db
 from server.resources.models.error_code_and_message import ErrorCodeAndMessage
 from server.common.error_codes_and_messages import (
-    ErrorCodeAndMessageMarshaller, INVALID_MODEL_PROVIDED, MODEL_DUMPING_ERROR,
+    ErrorCodeAndMessageMarshaller, ErrorCodeAndMessageAdditionalDetails,
+    ErrorCodeAndMessageFormatter, INVALID_MODEL_PROVIDED, MODEL_DUMPING_ERROR,
     MISSING_API_KEY, INVALID_API_KEY, UNAUTHORIZED, UNEXPECTED_ERROR)
 from server.database.models.user import User, Role
 
@@ -26,8 +27,8 @@ def unmarshal_request(schema, allow_none: bool = False, partial=False):
 
                 model, errors = schema.load(body, partial=partial)
                 if errors:
-                    invalid_model_provided_error = INVALID_MODEL_PROVIDED
-                    invalid_model_provided_error.error_detail = errors
+                    invalid_model_provided_error = ErrorCodeAndMessageAdditionalDetails(
+                        INVALID_MODEL_PROVIDED, errors)
                     return ErrorCodeAndMessageMarshaller(
                         invalid_model_provided_error), 400
 
@@ -54,11 +55,12 @@ def marshal_response(schema=None):
 
             json, errors = schema.dump(model)
 
-            if (errors):
-                model_dumping_error = MODEL_DUMPING_ERROR
-                model_dumping_error.error_message = "Server error while dumping model of type %s" % type(
-                    model).__name__
-                model_dumping_error.error_detail = errors
+            if errors:
+                model_dumping_error = ErrorCodeAndMessageFormatter(
+                    MODEL_DUMPING_ERROR,
+                    type(model).__name__)
+                model_dumping_error = ErrorCodeAndMessageAdditionalDetails(
+                    model_dumping_error, errors)
                 return ErrorCodeAndMessageMarshaller(model_dumping_error), 500
 
             return json

@@ -9,6 +9,7 @@ class PipelineParameterSchema(Schema):
     class Meta:
         ordered = True
 
+    identifier = fields.Str(load_from='id', dump_to='id', required=True)
     name = fields.Str(required=True)
     parameter_type = fields.Str(
         required=True,
@@ -42,6 +43,7 @@ class PipelineParameter():
     schema = PipelineParameterSchema()
 
     def __init__(self,
+                 identifier: int = None,
                  name: str = None,
                  parameter_type: str = None,
                  is_optional: bool = None,
@@ -49,6 +51,7 @@ class PipelineParameter():
                  default_value: str = None,
                  description: str = None):
 
+        self.identifier = identifier
         self.name = name
         self.parameter_type = parameter_type
         self.is_optional = is_optional

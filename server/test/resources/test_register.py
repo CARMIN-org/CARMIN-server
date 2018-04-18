@@ -7,7 +7,7 @@ from server.resources.models.error_code_and_message import ErrorCodeAndMessageSc
 from server.common.error_codes_and_messages import (
     INVALID_API_KEY, UNAUTHORIZED, MISSING_API_KEY, USERNAME_ALREADY_EXISTS,
     UNEXPECTED_ERROR)
-from server.test.utils import load_json_data
+from server.test.utils import load_json_data, error_from_response
 from server.test.conftest import test_client, session
 from server.test.fakedata.users import admin, standard_user, standard_user_2
 from server.database.models.user import User
@@ -103,21 +103,23 @@ class TestRegisterResource():
             test_user["username"])
         assert error == expected_error_code_and_message
 
-    def test_register_already_existing_user_folder(self, test_client, session,
-                                                   test_user):
-        os.mkdir(
-            os.path.join(app.config['DATA_DIRECTORY'], test_user["username"]))
+    def test_register_already_existing_user_folder_overwrite_folder(
+            self, test_client, test_user):
+        user_folder_path = os.path.join(app.config['DATA_DIRECTORY'],
+                                        test_user["username"])
+        os.mkdir(user_folder_path)
+        with open(os.path.join(user_folder_path, "file.json"), 'w') as f:
+            f.write('{"test": "json"}')
 
         response = test_client.post(
             "/users/register",
             headers={"apiKey": admin().api_key},
             data=json.dumps(test_user),
             follow_redirects=True)
-        error = ErrorCodeAndMessageSchema().load(load_json_data(response)).data
-        assert response.status_code == 500
-        assert error == UNEXPECTED_ERROR
 
-        already_existing_user = session.query(User).filter_by(
-            username=test_user["username"]).first()
+        assert response.status_code == 204
 
-        assert not already_existing_user
+        folder_final_content = os.listdir(user_folder_path)
+        assert len(folder_final_content) == 1
+        assert "executions" in folder_final_content
+        assert "file.json" not in folder_final_content

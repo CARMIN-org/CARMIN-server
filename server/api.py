@@ -18,6 +18,7 @@ def declare_api(app):
     from server.resources.path import Path
     from server.resources.pipeline import Pipeline
     from server.resources.pipelines import Pipelines
+    from server.resources.pipeline_boutiquesdescriptor import PipelineBoutiquesDescriptor
     from server.resources.platform import Platform
 
     api.add_resource(Platform, '/platform')
@@ -38,4 +39,7 @@ def declare_api(app):
                      '/executions/<string:execution_identifier>/kill')
     api.add_resource(Pipelines, '/pipelines')
     api.add_resource(Pipeline, '/pipelines/<string:pipeline_identifier>')
+    api.add_resource(
+        PipelineBoutiquesDescriptor,
+        '/pipelines/<string:pipeline_identifier>/boutiquesdescriptor')
     api.add_resource(Path, '/path/<path:complete_path>', '/path/')

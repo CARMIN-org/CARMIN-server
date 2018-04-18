@@ -248,7 +248,11 @@ class TestPathResource():
             headers={"apiKey": standard_user().api_key},
             data='{"type": "Invented", "base64Content": "ewlfkjweflk=="}')
         error = error_from_response(response)
-        assert error == INVALID_MODEL_PROVIDED
+        assert error.error_code == INVALID_MODEL_PROVIDED.error_code
+        assert error.error_message == INVALID_MODEL_PROVIDED.error_message
+        assert len(error.error_detail) == 1
+        assert "type" in error.error_detail
+
 
     def test_put_where_parent_dir_not_exist(self, test_client):
         response = test_client.put(

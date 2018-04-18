@@ -111,11 +111,11 @@ In subsequent requests, all we have to do is include the `apiKey` in the headers
 Let's add some data to the server with the `PUT /path/{completePath}` method:
 
 ```bash
-curl -X "PUT" "http://localhost:8080/path/admin/hello_world.txt" \
+curl -X "PUT" "http://localhost:8080/path/admin/new_user.txt" \
      -H 'apiKey: [secret-api-key]' \
      -d $'{
   "type": "File",
-  "base64Content": "aGVsbG8gd29ybGQK"
+  "base64Content": "bmV3IENBUk1JTiB1c2VyCg=="
 }'
 ```
 
@@ -127,7 +127,7 @@ uploaded to the server.
 Now we can query the server to see if our file really exists:
 
 ```bash
-curl "http://localhost:8080/path/admin/hello_world.txt?action=properties" \
+curl "http://localhost:8080/path/admin/new_user.txt?action=properties" \
      -H 'apiKey: [secret-api-key]'
 ```
 
@@ -135,7 +135,7 @@ The server should return a `Path` object, which describes the resource that we u
 
 ```json
 {
-  "platformPath": "http://localhost:8080/path/admin/hello_world.txt",
+  "platformPath": "http://localhost:8080/path/admin/new_user.txt",
   "lastModificationDate": 1521740108,
   "isDirectory": false,
   "size": 12,
@@ -147,7 +147,7 @@ To see what the file contains, we can issue the same request, but replace the ac
 with `content`:
 
 ```bash
-curl "http://localhost:8080/path/admin/hello_world.txt?action=content" \
+curl "http://localhost:8080/path/admin/new_user.txt?action=content" \
      -H 'apiKey: [secret-api-key]'
 ```
 
@@ -164,9 +164,9 @@ and copies the contents of the file to another file, just like the `cp` UNIX com
 Add this descriptor file in `$PIPELINE_DIRECTORY/boutiques`:
 ```json
 {
-    "command-line": "output.sh [INPUT_FILE] [OUTPUT_FILE]",
+    "command-line": "echo \"Welcome to CARMIN-Server, $(cat [INPUT_FILE]).\" &> [OUTPUT_FILE]",
     "container-image": {
-        "image": "boutiques/examples",
+        "image": "alpine",
         "type": "docker"
     },
     "description": "A simple script to test output files",
@@ -206,7 +206,7 @@ Add this descriptor file in `$PIPELINE_DIRECTORY/boutiques`:
         {
             "id": "output_file",
             "name": "Output file",
-            "path-template": "[INPUT_FILE]-processed.log",
+            "path-template": "[INPUT_FILE]-greeting.txt",
             "path-template-stripped-extensions": [
                 ".txt",
                 ".mnc",
@@ -285,7 +285,7 @@ curl -X "POST" "http://localhost:8080/executions" \
   "name": "my_first_execution",
   "pipelineIdentifier": "[pipeline-identifier]",
   "inputValues": {
-    "input_file": "http://localhost:8080/path/admin/hello_world.txt",
+    "input_file": "http://localhost:8080/path/admin/new_user.txt"
   }
 }'
 
@@ -306,7 +306,7 @@ Date: Tue, 27 Mar 2018 02:21:33 GMT
   "pipelineIdentifier": "[pipeline-identifier]",
   "status": "Initializing",
   "inputValues": {
-    "input_file": "http://localhost:8080/path/admin/hello_world.txt"
+    "input_file": "http://localhost:8080/path/admin/new_user.txt"
   }
 }
 ```

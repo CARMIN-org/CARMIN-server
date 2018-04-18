@@ -12,6 +12,7 @@ PropValueTwo = "prop_value_two"
 PropValueThree = "prop_value_three"
 
 PipelineParamOne = PipelineParameter(
+    identifier="PipelineParam1",
     name="PipelineParam1",
     parameter_type="File",
     is_optional=False,
@@ -19,6 +20,7 @@ PipelineParamOne = PipelineParameter(
     description="PipelineParam1 Description")
 
 PipelineParamTwo = PipelineParameter(
+    identifier="PipelineParam2",
     name="PipelineParam2",
     parameter_type="String",
     is_optional=False,
@@ -26,6 +28,7 @@ PipelineParamTwo = PipelineParameter(
     description="PipelineParam2 Description")
 
 PipelineParamThree = PipelineParameter(
+    identifier="file_input",
     name="file_input",
     parameter_type="File",
     is_optional=False,

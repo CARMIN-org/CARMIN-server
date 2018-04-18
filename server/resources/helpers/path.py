@@ -188,4 +188,10 @@ def platform_path_exists(url_root: str, platform_path: str) -> (bool, str):
                      platform_path[len(path_url):])), platform_path
 
 
+def path_from_data_dir(url_root: str, platform_path: str) -> str:
+    path_url = '{}path/'.format(url_root)
+    return os.path.join(app.config['DATA_DIRECTORY'],
+                        platform_path[len(path_url):])
+
+
 from .executions import EXECUTIONS_DIRNAME

@@ -9,12 +9,14 @@ from .resources.models.platform_properties import PlatformPropertiesSchema
 from server import app
 from server.database import db
 from .database.models.user import User, Role
+from server.resources.helpers.pipelines import export_boutiques_pipelines
 from server.common.error_codes_and_messages import PATH_EXISTS
 from server.platform_properties import PLATFORM_PROPERTIES
 
 
 def start_up():
     pipeline_and_data_directory_present()
+    export_pipelines()
     properties_validation()
     find_or_create_admin()
 
@@ -66,6 +68,9 @@ def pipeline_and_data_directory_present():
     if not DATA_DIRECTORY:
         raise EnvironmentError(
             "ENV['DATA_DIRECTORY'] must be set to input Data directory path")
+    if os.getenv('DATABASE_URI') is None:
+        raise EnvironmentError(
+            "ENV['DATABASE_URI'] must be set to the database URI")
 
     if (not os.path.isdir(PIPELINE_DIRECTORY)
             or not os.path.isdir(DATA_DIRECTORY)):
@@ -77,11 +82,17 @@ def pipeline_and_data_directory_present():
 def find_or_create_admin():
     admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
-        result, error = register_user("admin", "admin", Role.admin, db.session,
-                                      True)
+        result, error = register_user("admin", "admin", Role.admin, db.session)
 
         if error:
             raise EnvironmentError("Could not create first admin account.")
+
+
+def export_pipelines():
+    success, error = export_boutiques_pipelines()
+
+    if not success:
+        raise EnvironmentError(error)
 
 
 from server.resources.helpers.register import register_user

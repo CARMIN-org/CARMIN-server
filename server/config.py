@@ -11,8 +11,7 @@ SUPPORTED_MODULES = [
 class Config(object):
     TESTING = False
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'database/app.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URI')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DATA_DIRECTORY = os.environ.get('DATA_DIRECTORY')
     PIPELINE_DIRECTORY = os.environ.get('PIPELINE_DIRECTORY')
@@ -24,5 +23,5 @@ class ProductionConfig(Config):
 
 class TestConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URI') or \
         'sqlite:///' + os.path.join(basedir, 'test/database/app.db')

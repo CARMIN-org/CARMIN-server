@@ -1,5 +1,7 @@
 import os
 import json
+import shutil
+from boutiques import bosh
 from typing import Dict
 from server import app
 from server.database.models.user import User
@@ -11,20 +13,27 @@ from server.common.error_codes_and_messages import (
     INVALID_PIPELINE_IDENTIFIER, EXECUTION_IDENTIFIER_MUST_NOT_BE_SET,
     INVALID_QUERY_PARAMETER, UNEXPECTED_ERROR, ErrorCodeAndMessageFormatter)
 from server.resources.models.execution import Execution
+from server.resources.helpers.pipelines import get_pipeline
 
 INPUTS_FILENAME = "inputs.json"
 EXECUTIONS_DIRNAME = "executions"
+ABSOLUTE_PATH_INPUTS_FILENAME = "inputs_abs.json"
+
+
+def create_user_executions_dir(username: str):
+    user_execution_dir = os.path.join(
+        get_user_data_directory(username), EXECUTIONS_DIRNAME)
+    try:
+        os.mkdir(user_execution_dir)
+    except FileExistsError:
+        pass
+    return user_execution_dir
 
 
 def create_execution_directory(execution: ExecutionDB,
                                user: User) -> (str, ErrorCodeAndMessage):
 
-    user_execution_dir = os.path.join(
-        get_user_data_directory(user.username), EXECUTIONS_DIRNAME)
-    try:
-        os.mkdir(user_execution_dir)
-    except FileExistsError:
-        pass
+    user_execution_dir = create_user_executions_dir(user.username)
     execution_dir_absolute_path = os.path.join(user_execution_dir,
                                                execution.identifier)
 
@@ -34,6 +43,10 @@ def create_execution_directory(execution: ExecutionDB,
 
     path, error = create_directory(execution_dir_absolute_path)
     return execution_dir_absolute_path, error
+
+
+def delete_execution_directory(execution_dir_path: str):
+    shutil.rmtree(execution_dir_path, ignore_errors=True)
 
 
 def get_execution_dir(username: str, execution_identifier: str) -> str:
@@ -56,13 +69,28 @@ def write_inputs_to_file(execution: Execution,
         return UNEXPECTED_ERROR
 
 
+def write_absolute_path_inputs_to_file(
+        input_values: Dict,
+        path_to_execution_dir: str) -> (str, ErrorCodeAndMessage):
+    inputs_json_file = os.path.join(path_to_execution_dir,
+                                    ABSOLUTE_PATH_INPUTS_FILENAME)
+    write_content = json.dumps(input_values)
+    try:
+        with open(inputs_json_file, 'w') as f:
+            f.write(write_content)
+    except OSError:
+        return None, UNEXPECTED_ERROR
+
+    return inputs_json_file, None
+
+
 def input_files_exist(input_values: Dict, pipeline: Pipeline,
                       url_root: str) -> (bool, str):
     pipeline_parameters = pipeline.parameters
 
     for key in input_values:
         for parameter in pipeline_parameters:
-            if parameter.parameter_type == "File" and parameter.name == key:
+            if parameter.parameter_type == "File" and not parameter.is_returned_value and parameter.identifier == key:
                 exists, path = platform_path_exists(url_root,
                                                     input_values[key])
                 if not exists:
@@ -70,18 +98,29 @@ def input_files_exist(input_values: Dict, pipeline: Pipeline,
     return True, None
 
 
-def get_pipeline(pipeline_identifier: str) -> Pipeline:
-    pipeline_directory = app.config['PIPELINE_DIRECTORY']
-    all_pipelines = [
-        f.path for f in os.scandir(pipeline_directory)
-        if not f.name.startswith(".") and f.is_file()
-    ]
+def create_absolute_path_inputs(username: str, execution_identifier: str,
+                                pipeline_identifier: str,
+                                url_root: str) -> (str, ErrorCodeAndMessage):
+    input_values, error = load_inputs(username, execution_identifier)
+    if error:
+        return None, error
 
-    for pipeline in all_pipelines:
-        with open(pipeline) as f:
-            pipeline_json = json.load(f)
-            if pipeline_json["identifier"] == pipeline_identifier:
-                return PipelineSchema().load(pipeline_json).data
+    pipeline = get_pipeline(pipeline_identifier)
+    if not pipeline:
+        return None, INVALID_PIPELINE_IDENTIFIER
+
+    for key in input_values:
+        for parameter in pipeline.parameters:
+            if parameter.parameter_type == "File" and not parameter.is_returned_value and parameter.identifier == key:
+                input_values[key] = path_from_data_dir(url_root,
+                                                       input_values[key])
+
+    execution_dir = get_execution_dir(username, execution_identifier)
+    path, error = write_absolute_path_inputs_to_file(input_values,
+                                                     execution_dir)
+    if error:
+        return None, error
+    return path, None
 
 
 def load_inputs(username: str,
@@ -160,4 +199,6 @@ def filter_executions(executions, offset, limit):
     return executions, None
 
 
-from .path import create_directory, get_user_data_directory, is_safe_path, is_data_accessible, platform_path_exists
+from .path import (create_directory, get_user_data_directory, is_safe_path,
+                   is_data_accessible, platform_path_exists,
+                   path_from_data_dir)

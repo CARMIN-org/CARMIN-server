@@ -8,6 +8,14 @@ def ErrorCodeAndMessageMarshaller(error_code_and_message: ErrorCodeAndMessage):
     return ErrorCodeAndMessageSchema().dump(error_code_and_message).data
 
 
+def ErrorCodeAndMessageAdditionalDetails(
+        error_code_and_message: ErrorCodeAndMessage, additional_details):
+    error_code_and_message_result = copy.deepcopy(error_code_and_message)
+    error_code_and_message_result.error_detail = copy.deepcopy(
+        additional_details)
+    return error_code_and_message_result
+
+
 def ErrorCodeAndMessageFormatter(error_code_and_message: ErrorCodeAndMessage,
                                  *args):
     error_code_and_message_result = copy.deepcopy(error_code_and_message)
@@ -68,3 +76,6 @@ INVALID_QUERY_PARAMETER = ErrorCodeAndMessage(
     120, "Invalid value '{}' for query parameter '{}'.")
 CANNOT_MODIFY_PARAMETER = ErrorCodeAndMessage(
     125, "'{}' cannot be modified on an existing Execution.")
+INVALID_INVOCATION = ErrorCodeAndMessage(130, "Invalid invocation")
+CANNOT_REPLAY_EXECUTION = ErrorCodeAndMessage(
+    135, "An execution cannot be replayed. Current status: '{}'")
