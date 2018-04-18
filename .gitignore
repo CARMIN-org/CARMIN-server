@@ -1,4 +1,5 @@
+*.log
 *.pyc
-*/.pytest_cache/*
+.pytest_cache/*
 *.db
 /carmin-server/.coverage

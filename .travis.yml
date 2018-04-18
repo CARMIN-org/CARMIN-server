@@ -9,10 +9,9 @@ python:
 install:
 - pip install --upgrade setuptools
 - pip install coveralls pytest pytest-runner pylint
-- pip install ./carmin-server
+- pip install .
 
 script:
-- cd ./carmin-server
 - pylint **/*.py --errors-only
 - coverage run --include=server/\* -m pytest server
 
