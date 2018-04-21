@@ -7,6 +7,7 @@ def declare_api(app):
     from server.startup_validation import start_up
     from server.resources.authenticate import Authenticate
     from server.resources.register import Register
+    from server.resources.edit import Edit
     from server.resources.executions import Executions
     from server.resources.execution import Execution
     from server.resources.execution_kill import ExecutionKill
@@ -24,6 +25,7 @@ def declare_api(app):
     api.add_resource(Platform, '/platform')
     api.add_resource(Authenticate, '/authenticate')
     api.add_resource(Register, '/users/register')
+    api.add_resource(Edit, '/users/edit')
     api.add_resource(Executions, '/executions')
     api.add_resource(ExecutionsCount, '/executions/count')
     api.add_resource(Execution, '/executions/<string:execution_identifier>')

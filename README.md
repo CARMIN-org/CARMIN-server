@@ -13,6 +13,8 @@ CARMIN-server is a lightweight server implementation of the [CARMIN API](https:/
   - [Installing with Docker](#installing-with-docker)
 - [Usage](#usage)
   - [Authentication](#authentication)
+  	  - [Creating Accounts](#creating-accounts)
+  	  - [Changing Your Password](#changing-your-password)
   - [Uploading Data to the Server](#uploading-data-to-the-server)
   - [Getting Data from the Server](#getting-data-from-the-server)
   - [Adding a Pipeline](#adding-a-pipeline)
@@ -106,6 +108,44 @@ for authenticated queries.
 ```
 
 In subsequent requests, all we have to do is include the `apiKey` in the headers.
+
+#### Creating Accounts
+
+To add new users to the database, an admin must send a `POST` request at the `/users/register` endpoint. The admin must include both `username` and `password` in the request body.
+
+Example:
+```
+curl -X "POST" "http://localhost:8080/users/register" \
+     -H 'apiKey: [secret-api-key]' \
+     -d $'{
+  "username": "new-user",
+  "password": "user-password"
+}'
+```
+
+#### Changing Your Password
+
+Passwords can be changed by sending a `POST` request to the `/users/edit` endpoint.
+Admins can change passwords for any user, and regular users can only change their own. To change a user's password, an admin must include both the `username` and `password` in the request body. For a user to change his/her own password, only the `password` is required.
+
+Example (Admin):
+```
+curl -X "POST" "http://localhost:8080/users/edit" \
+     -H 'apiKey: [secret-admin-api-key]' \
+     -d $'{
+  "username": "some-user",
+  "password": "new-password"
+}'
+```
+
+Example (Regular User):
+```
+curl -X "POST" "http://localhost:8080/users/edit" \
+     -H 'apiKey: [secret-api-key]' \
+     -d $'{
+  "password": "new-password"
+}'
+```
 
 ### Uploading Data to the Server
 Let's add some data to the server with the `PUT /path/{completePath}` method:
