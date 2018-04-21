@@ -2,9 +2,11 @@
 which contains a description of the PlatformProperties object.
 """
 import os
+import sys
 import json
 from typing import Dict
-from .config import SUPPORTED_PROTOCOLS, SUPPORTED_MODULES
+from .config import (SUPPORTED_PROTOCOLS, SUPPORTED_MODULES,
+                     SQLITE_DEFAULT_PROD_DB_URI, DEFAULT_PROD_DB_URI)
 from .resources.models.platform_properties import PlatformPropertiesSchema
 from server import app
 from server.database import db
@@ -68,9 +70,12 @@ def pipeline_and_data_directory_present():
     if not DATA_DIRECTORY:
         raise EnvironmentError(
             "ENV['DATA_DIRECTORY'] must be set to input Data directory path")
-    if os.getenv('DATABASE_URI') is None:
-        raise EnvironmentError(
-            "ENV['DATABASE_URI'] must be set to the database URI")
+
+    if app.config['SQLALCHEMY_DATABASE_URI'] == SQLITE_DEFAULT_PROD_DB_URI:
+        print(
+            "No SQL database URI found. Reverting to default production database found at {}".
+            format(DEFAULT_PROD_DB_URI),
+            flush=True)
 
     if (not os.path.isdir(PIPELINE_DIRECTORY)
             or not os.path.isdir(DATA_DIRECTORY)):

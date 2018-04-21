@@ -43,9 +43,9 @@ must be placed inside a `boutiques` directory, as such:
 
 ### Database
 
-By default, `CARMIN-server` uses a lightweight `sqlite` database that does not require any setup. `CARMIN-server` also natively supports a `postgres` database. If you'd like to use an external `postgres` database, simply set a `$DATABASE_URL` environment variable to point to the production database URL.
+By default, `CARMIN-server` uses a lightweight `sqlite` database that does not require any setup. `CARMIN-server` also natively supports a `postgres` database. If you'd like to use an external `postgres` database, simply set a `$DATABASE_URI` environment variable to point to the production database URL.
 ```bash
-$ export DATABASE_URL=postgresql://user:password@localhost/carmin
+$ export DATABASE_URI=postgresql://user:password@localhost/carmin
 ```
 
 ### Installing Locally
