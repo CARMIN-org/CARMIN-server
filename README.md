@@ -206,7 +206,7 @@ Add this descriptor file in `$PIPELINE_DIRECTORY/boutiques`:
         {
             "id": "output_file",
             "name": "Output file",
-            "path-template": "[INPUT_FILE]-greeting.txt",
+            "path-template": "./greeting.txt",
             "path-template-stripped-extensions": [
                 ".txt",
                 ".mnc",

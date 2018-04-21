@@ -35,13 +35,13 @@ class ExecutionPlay(Resource):
             return UNEXPECTED_ERROR
 
         # Get the boutiques descriptor path
-        boutiques_descriptor_path, error = get_boutiques_descriptor_path(
+        boutiques_descriptor_path, error = get_original_descriptor_path(
             execution.pipeline_identifier)
         if error:
             return error
 
         # Create a version of the inputs file with correct links
-        modified_inputs_path, error = create_relative_path_inputs(
+        modified_inputs_path, error = create_absolute_path_inputs(
             user.username, execution.identifier, execution.pipeline_identifier,
             request.url_root)
 
