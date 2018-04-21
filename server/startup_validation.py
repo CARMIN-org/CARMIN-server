@@ -4,6 +4,8 @@ which contains a description of the PlatformProperties object.
 import os
 import sys
 import json
+import string
+import random
 from typing import Dict
 from .config import (SUPPORTED_PROTOCOLS, SUPPORTED_MODULES,
                      SQLITE_DEFAULT_PROD_DB_URI, DEFAULT_PROD_DB_URI)
@@ -87,10 +89,22 @@ def pipeline_and_data_directory_present():
 def find_or_create_admin():
     admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
-        result, error = register_user("admin", "admin", Role.admin, db.session)
+        admin_username = "admin"
+        admin_password = generate_admin_password()
+        result, error = register_user(admin_username, admin_password,
+                                      Role.admin, db.session)
 
         if error:
             raise EnvironmentError("Could not create first admin account.")
+        separator = '-' * 20
+        print('{0} Admin Account {0}\nusername: {1}\npassword: {2}\n'.format(
+            separator, admin_username, admin_password))
+
+
+def generate_admin_password(password_length=16):
+    return ''.join(
+        random.SystemRandom().choice(string.ascii_letters + string.digits)
+        for _ in range(password_length))
 
 
 def export_pipelines():

@@ -83,7 +83,7 @@ docker run -p 8080:8080 \
 
 ## Usage
 
-CARMIN-server automatically creates an admin user with `admin` as username and password.
+CARMIN-server automatically creates an admin user with `admin` as username. The password is printed to the console upon launching the server for the first time.
 
 You can get your `apiKey` by authenticating into the system:
 
@@ -92,7 +92,7 @@ You can get your `apiKey` by authenticating into the system:
 curl -X "POST" "http://localhost:8080/authenticate" \
      -d $'{
   "username": "admin",
-  "password": "admin"
+  "password": "[default-admin-password]"
 }'
 
 ```
