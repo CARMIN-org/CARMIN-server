@@ -1,4 +1,8 @@
 import os
+try:
+    from os import scandir, walk
+except ImportError:
+    from scandir import scandir, walk
 import json
 from boutiques import bosh
 from server import app
@@ -15,7 +19,7 @@ def pipelines(pipeline_identifier: str = None,
               property_value: str = None):
     response = []
     pipeline_path = app.config['PIPELINE_DIRECTORY']
-    for subdir, dirs, files in os.walk(pipeline_path):
+    for subdir, dirs, files in walk(pipeline_path):
         if study_identifier:
             dirs[:] = [i for i in dirs if i == study_identifier]
 
@@ -53,7 +57,7 @@ def get_all_pipelines(_type: str = None) -> list:
                                           _type)
 
     all_pipelines = [
-        f for f in os.scandir(pipeline_directory)
+        f for f in scandir(pipeline_directory)
         if not f.name.startswith(".") and f.is_file()
     ]
     return all_pipelines
