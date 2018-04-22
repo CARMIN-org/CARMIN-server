@@ -11,6 +11,8 @@ CARMIN-server is a lightweight server implementation of the [CARMIN API](https:/
   - [Database](#database)
   - [Installing Locally](#installing-locally)
   - [Installing with Docker](#installing-with-docker)
+  - [Common Installation Problems](#common-installation-problems)
+  	  - [pg_config](#pg_config)
 - [Usage](#usage)
   - [Authentication](#authentication)
   	  - [Creating Accounts](#creating-accounts)
@@ -80,6 +82,12 @@ docker run -p 8080:8080 \
 		   -v $DATA_DIRECTORY:/carmin-assets/data \
 		   carmin-server
 ```
+
+### Common Installation Problems
+
+#### pg_config
+
+The server launch might fail due to a missing `pg_config` installation on the computer. To fix this, download `libpq-dev` using your distro's package manager. (On Red Hat and derived distributions, install `postgresql-devel`)
 
 ## Usage
 
