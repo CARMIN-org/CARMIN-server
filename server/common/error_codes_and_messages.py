@@ -47,6 +47,7 @@ MISSING_PIPELINE_PROPERTY = ErrorCodeAndMessage(
     35, "'property' must be specified to use the 'propertyValue' argument")
 USERNAME_ALREADY_EXISTS = ErrorCodeAndMessage(40,
                                               "Username '{}' already exists")
+USER_DOES_NOT_EXIST = ErrorCodeAndMessage(41, "Username '{}' does not exist")
 UNAUTHORIZED = ErrorCodeAndMessage(45, "Unauthorized access")
 INVALID_PATH = ErrorCodeAndMessage(50, "Invalid pathname")
 PATH_EXISTS = ErrorCodeAndMessage(55, "File/directory already exists")

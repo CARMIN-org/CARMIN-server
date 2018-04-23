@@ -2,9 +2,13 @@
 which contains a description of the PlatformProperties object.
 """
 import os
+import sys
 import json
+import string
+import random
 from typing import Dict
-from .config import SUPPORTED_PROTOCOLS, SUPPORTED_MODULES
+from .config import (SUPPORTED_PROTOCOLS, SUPPORTED_MODULES,
+                     SQLITE_DEFAULT_PROD_DB_URI, DEFAULT_PROD_DB_URI)
 from .resources.models.platform_properties import PlatformPropertiesSchema
 from server import app
 from server.database import db
@@ -68,9 +72,12 @@ def pipeline_and_data_directory_present():
     if not DATA_DIRECTORY:
         raise EnvironmentError(
             "ENV['DATA_DIRECTORY'] must be set to input Data directory path")
-    if os.getenv('DATABASE_URI') is None:
-        raise EnvironmentError(
-            "ENV['DATABASE_URI'] must be set to the database URI")
+
+    if app.config['SQLALCHEMY_DATABASE_URI'] == SQLITE_DEFAULT_PROD_DB_URI:
+        print(
+            "No SQL database URI found. Reverting to default production database found at {}".
+            format(DEFAULT_PROD_DB_URI),
+            flush=True)
 
     if (not os.path.isdir(PIPELINE_DIRECTORY)
             or not os.path.isdir(DATA_DIRECTORY)):
@@ -82,10 +89,22 @@ def pipeline_and_data_directory_present():
 def find_or_create_admin():
     admin = db.session.query(User).filter_by(role=Role.admin).first()
     if not admin:
-        result, error = register_user("admin", "admin", Role.admin, db.session)
+        admin_username = "admin"
+        admin_password = generate_admin_password()
+        result, error = register_user(admin_username, admin_password,
+                                      Role.admin, db.session)
 
         if error:
             raise EnvironmentError("Could not create first admin account.")
+        separator = '-' * 20
+        print('{0} Admin Account {0}\nusername: {1}\npassword: {2}\n'.format(
+            separator, admin_username, admin_password))
+
+
+def generate_admin_password(password_length=16):
+    return ''.join(
+        random.SystemRandom().choice(string.ascii_letters + string.digits)
+        for _ in range(password_length))
 
 
 def export_pipelines():

@@ -21,7 +21,7 @@ def create_user_directory(username: str) -> (str, ErrorCodeAndMessage):
     # First let's delete user directory in case it exists
     shutil.rmtree(user_dir_absolute_path, ignore_errors=True)
 
-    # We can now creat the user directory
+    # We can now create the user directory
     path, error = create_directory(user_dir_absolute_path, False)
     if error:
         return None, error

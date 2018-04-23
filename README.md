@@ -11,8 +11,12 @@ CARMIN-server is a lightweight server implementation of the [CARMIN API](https:/
   - [Database](#database)
   - [Installing Locally](#installing-locally)
   - [Installing with Docker](#installing-with-docker)
+  - [Common Installation Problems](#common-installation-problems)
+  	  - [pg_config](#pg_config)
 - [Usage](#usage)
   - [Authentication](#authentication)
+  	  - [Creating Accounts](#creating-accounts)
+  	  - [Changing Your Password](#changing-your-password)
   - [Uploading Data to the Server](#uploading-data-to-the-server)
   - [Getting Data from the Server](#getting-data-from-the-server)
   - [Adding a Pipeline](#adding-a-pipeline)
@@ -43,9 +47,9 @@ must be placed inside a `boutiques` directory, as such:
 
 ### Database
 
-By default, `CARMIN-server` uses a lightweight `sqlite` database that does not require any setup. `CARMIN-server` also natively supports a `postgres` database. If you'd like to use an external `postgres` database, simply set a `$DATABASE_URL` environment variable to point to the production database URL.
+By default, `CARMIN-server` uses a lightweight `sqlite` database that does not require any setup. `CARMIN-server` also natively supports a `postgres` database. If you'd like to use an external `postgres` database, simply set a `$DATABASE_URI` environment variable to point to the production database URL.
 ```bash
-$ export DATABASE_URL=postgresql://user:password@localhost/carmin
+$ export DATABASE_URI=postgresql://user:password@localhost/carmin
 ```
 
 ### Installing Locally
@@ -79,9 +83,15 @@ docker run -p 8080:8080 \
 		   carmin-server
 ```
 
+### Common Installation Problems
+
+#### pg_config
+
+The server launch might fail due to a missing `pg_config` installation on the computer. To fix this, download `libpq-dev` using your distro's package manager. (On Red Hat and derived distributions, install `postgresql-devel`)
+
 ## Usage
 
-CARMIN-server automatically creates an admin user with `admin` as username and password.
+CARMIN-server automatically creates an admin user with `admin` as username. The password is printed to the console upon launching the server for the first time.
 
 You can get your `apiKey` by authenticating into the system:
 
@@ -90,7 +100,7 @@ You can get your `apiKey` by authenticating into the system:
 curl -X "POST" "http://localhost:8080/authenticate" \
      -d $'{
   "username": "admin",
-  "password": "admin"
+  "password": "[default-admin-password]"
 }'
 
 ```
@@ -106,6 +116,44 @@ for authenticated queries.
 ```
 
 In subsequent requests, all we have to do is include the `apiKey` in the headers.
+
+#### Creating Accounts
+
+To add new users to the database, an admin must send a `POST` request at the `/users/register` endpoint. The admin must include both `username` and `password` in the request body.
+
+Example:
+```
+curl -X "POST" "http://localhost:8080/users/register" \
+     -H 'apiKey: [secret-api-key]' \
+     -d $'{
+  "username": "new-user",
+  "password": "user-password"
+}'
+```
+
+#### Changing Your Password
+
+Passwords can be changed by sending a `POST` request to the `/users/edit` endpoint.
+Admins can change passwords for any user, and regular users can only change their own. To change a user's password, an admin must include both the `username` and `password` in the request body. For a user to change his/her own password, only the `password` is required.
+
+Example (Admin):
+```
+curl -X "POST" "http://localhost:8080/users/edit" \
+     -H 'apiKey: [secret-admin-api-key]' \
+     -d $'{
+  "username": "some-user",
+  "password": "new-password"
+}'
+```
+
+Example (Regular User):
+```
+curl -X "POST" "http://localhost:8080/users/edit" \
+     -H 'apiKey: [secret-api-key]' \
+     -d $'{
+  "password": "new-password"
+}'
+```
 
 ### Uploading Data to the Server
 Let's add some data to the server with the `PUT /path/{completePath}` method:
@@ -206,7 +254,7 @@ Add this descriptor file in `$PIPELINE_DIRECTORY/boutiques`:
         {
             "id": "output_file",
             "name": "Output file",
-            "path-template": "[INPUT_FILE]-greeting.txt",
+            "path-template": "./greeting.txt",
             "path-template-stripped-extensions": [
                 ".txt",
                 ".mnc",
