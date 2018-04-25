@@ -7,7 +7,8 @@ from server.common.utils import marshal
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageFormatter, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION,
     MD5_ON_DIR, LIST_ACTION_ON_FILE, ACTION_REQUIRED, UNEXPECTED_ERROR,
-    PATH_DOES_NOT_EXIST, PATH_IS_DIRECTORY, INVALID_REQUEST)
+    PATH_DOES_NOT_EXIST, PATH_IS_DIRECTORY, INVALID_REQUEST,
+    PATH_DOES_NOT_EXIST)
 from .models.upload_data import UploadDataSchema
 from .models.boolean_response import BooleanResponse
 from .models.path import Path as PathModel
@@ -114,7 +115,7 @@ class Path(Resource):
             try:
                 os.remove(requested_data_path)
             except FileNotFoundError:
-                return marshal(INVALID_PATH), 400
+                return marshal(PATH_DOES_NOT_EXIST), 400
             except OSError:
                 return marshal(UNEXPECTED_ERROR), 500
         return Response(status=204)
