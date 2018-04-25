@@ -1,5 +1,16 @@
 from server.resources.models.execution import Execution
+from server.database.models.execution import Execution as ExecutionDB, ExecutionStatus
 from server.test.fakedata.users import standard_user
+
+
+def execution_for_db(execution_id: str, username: str) -> ExecutionDB:
+    return ExecutionDB(
+        identifier=execution_id,
+        name="valid_execution",
+        pipeline_identifier="pipeline1",
+        status=ExecutionStatus.Finished,
+        creator_username=username)
+
 
 POST_VALID_EXECUTION = Execution(
     name="valid_execution",

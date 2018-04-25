@@ -11,13 +11,17 @@ from server.resources.models.pipeline import Pipeline, PipelineSchema
 from server.common.error_codes_and_messages import (
     UNAUTHORIZED, INVALID_INPUT_FILE, INVALID_PATH, INVALID_MODEL_PROVIDED,
     INVALID_PIPELINE_IDENTIFIER, EXECUTION_IDENTIFIER_MUST_NOT_BE_SET,
-    INVALID_QUERY_PARAMETER, UNEXPECTED_ERROR, ErrorCodeAndMessageFormatter)
+    INVALID_QUERY_PARAMETER, PATH_DOES_NOT_EXIST, UNEXPECTED_ERROR,
+    ErrorCodeAndMessageFormatter)
 from server.resources.models.execution import Execution
 from server.resources.helpers.pipelines import get_pipeline
 
 INPUTS_FILENAME = "inputs.json"
 EXECUTIONS_DIRNAME = "executions"
 ABSOLUTE_PATH_INPUTS_FILENAME = "inputs_abs.json"
+
+STDOUT_FILENAME = "stdout.txt"
+STDERR_FILENAME = "stderr.txt"
 
 
 def create_user_executions_dir(username: str):
@@ -197,6 +201,24 @@ def filter_executions(executions, offset, limit):
                                                       limit, 'limit')
         executions = executions[0:limit]
     return executions, None
+
+
+def std_file_path(username: str, execution_identifier: str,
+                  filename: str) -> str:
+    return os.path.join(
+        get_user_data_directory(username), EXECUTIONS_DIRNAME,
+        execution_identifier, filename)
+
+
+def get_std_file(username: str, execution_identifier: str,
+                 filename: str) -> (str, ErrorCodeAndMessage):
+    file_path = std_file_path(username, execution_identifier, filename)
+
+    try:
+        with open(file_path) as f:
+            return f.read(), None
+    except OSError:
+        return None, PATH_DOES_NOT_EXIST
 
 
 from .path import (create_directory, get_user_data_directory, is_safe_path,
