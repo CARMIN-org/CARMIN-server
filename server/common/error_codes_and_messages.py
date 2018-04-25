@@ -80,3 +80,4 @@ CANNOT_MODIFY_PARAMETER = ErrorCodeAndMessage(
 INVALID_INVOCATION = ErrorCodeAndMessage(130, "Invalid invocation")
 CANNOT_REPLAY_EXECUTION = ErrorCodeAndMessage(
     135, "An execution cannot be replayed. Current status: '{}'")
+PAGE_NOT_FOUND = ErrorCodeAndMessage(404, "Page Not Found")

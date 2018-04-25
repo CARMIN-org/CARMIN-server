@@ -42,11 +42,13 @@ LOGGING_CONFIG = {
     },
     'loggers': {
         'request-response': {
+            'level': 'INFO',
             'propagate': False,
             'handlers': ['request-context']
         },
         'server-error': {
-            'propagata': False,
+            'level': 'WARNING',
+            'propagate': False,
             'handlers': ['unexpected-crash']
         }
     }
