@@ -5,7 +5,8 @@ from flask_restful import Resource, request
 from flask import Response, make_response
 from server.common.utils import marshal
 from server.common.error_codes_and_messages import (
-    ErrorCodeAndMessageFormatter, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION,
+    ErrorCodeAndMessageFormatter, ErrorCodeAndMessageAdditionalDetails,
+    INVALID_MODEL_PROVIDED, UNAUTHORIZED, INVALID_PATH, INVALID_ACTION,
     MD5_ON_DIR, LIST_ACTION_ON_FILE, ACTION_REQUIRED, UNEXPECTED_ERROR,
     PATH_IS_DIRECTORY, INVALID_REQUEST, PATH_DOES_NOT_EXIST)
 from .models.upload_data import UploadDataSchema
@@ -68,36 +69,55 @@ class Path(Resource):
             return marshal(INVALID_ACTION), 400
 
     @login_required
-    @unmarshal_request(UploadDataSchema(), allow_none=True)
-    def put(self, user, model, complete_path: str = ''):
+    def put(self, user, complete_path: str = ''):
+        data = request.data
         requested_data_path = make_absolute(complete_path)
 
         if not is_safe_for_put(requested_data_path, user):
             return marshal(INVALID_PATH), 401
 
-        if not model:
+        if request.headers.get(
+                'Content-Type',
+                default='').lower() == 'application/carmin+json' and data:
+            # Request data contains base64 encoding of file or archive
+            data = request.get_json(force=True, silent=True)
+            model, error = UploadDataSchema().load(data)
+            if error:
+                return marshal(
+                    ErrorCodeAndMessageAdditionalDetails(
+                        INVALID_MODEL_PROVIDED, error)), 400
+            if model.upload_type == "File":
+                if os.path.isdir(requested_data_path):
+                    error = ErrorCodeAndMessageFormatter(
+                        PATH_IS_DIRECTORY, complete_path)
+                    return marshal(error), 400
+                path, error = upload_file(model, requested_data_path)
+                if error:
+                    return marshal(error), 400
+                return marshal(path), 201
+
+            if model.upload_type == "Archive":
+                path, error = upload_archive(model, requested_data_path)
+                if error:
+                    return marshal(error), 400
+                return marshal(path), 201
+        if data:
+            # Content-Type is not 'application/carmin+json',
+            # request data is taken as raw text
+            try:
+                with open(requested_data_path, 'w') as f:
+                    f.write(data.decode('utf-8', errors='ignore'))
+                return marshal(
+                    PathModel.object_from_pathname(requested_data_path)), 201
+            except OSError:
+                return marshal(INVALID_PATH), 400
+        if not data:
             path, error = create_directory(requested_data_path)
             if error:
                 return marshal(error), 400
             file_location_header = {'Location': path.platform_path}
             string_path = json.dumps(PathSchema().dump(path).data)
             return make_response((string_path, 201, file_location_header))
-
-        if model.upload_type == "File":
-            if os.path.isdir(requested_data_path):
-                error = ErrorCodeAndMessageFormatter(PATH_IS_DIRECTORY,
-                                                     complete_path)
-                return marshal(error), 400
-            path, error = upload_file(model, requested_data_path)
-            if error:
-                return marshal(error), 400
-            return marshal(path), 201
-
-        if model.upload_type == "Archive":
-            path, error = upload_archive(model, requested_data_path)
-            if error:
-                return marshal(error), 400
-            return marshal(path), 201
 
         return marshal(INVALID_REQUEST), 400
 
