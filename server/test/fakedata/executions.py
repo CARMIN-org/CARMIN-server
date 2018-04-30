@@ -12,34 +12,41 @@ def execution_for_db(execution_id: str, username: str) -> ExecutionDB:
         creator_username=username)
 
 
-POST_VALID_EXECUTION = Execution(
-    name="valid_execution",
-    pipeline_identifier="pipeline1",
-    input_values={
-        "file_input":
-        "http://localhost/path/{}/test.txt".format(standard_user().username)
-    })
-
-POST_INVALID_EXECUTION_FILE_NOT_EXIST = Execution(
-    name="invalid_execution",
-    pipeline_identifier="pipeline1",
-    input_values={
-        "file_input":
-        "http://localhost/path/{}/does_not_exist.txt".format(
-            standard_user().username)
-    })
-
-POST_INVALID_EXECUTION_ARRAY_FILE_NOT_EXIST = Execution(
-    name="invalid_execution",
-    pipeline_identifier="pipeline1",
-    input_values={
-        "file_input": [
-            "http://localhost/path/{}/does_not_exist.txt".format(
-                standard_user().username),
+def post_valid_execution(pipeline_identifier: str):
+    return Execution(
+        name="valid_execution",
+        pipeline_identifier=pipeline_identifier,
+        input_values={
+            "input_file":
             "http://localhost/path/{}/test.txt".format(
                 standard_user().username)
-        ]
-    })
+        })
+
+
+def post_invalid_execution_file_not_exist(pipeline_identifier: str):
+    return Execution(
+        name="invalid_execution",
+        pipeline_identifier=pipeline_identifier,
+        input_values={
+            "input_file":
+            "http://localhost/path/{}/does_not_exist.txt".format(
+                standard_user().username)
+        })
+
+
+def post_invalid_execution_array_file_not_exist(pipeline_identifier: str):
+    return Execution(
+        name="invalid_execution",
+        pipeline_identifier=pipeline_identifier,
+        input_values={
+            "input_file": [
+                "http://localhost/path/{}/does_not_exist.txt".format(
+                    standard_user().username),
+                "http://localhost/path/{}/test.txt".format(
+                    standard_user().username)
+            ]
+        })
+
 
 POST_INVALID_EXECUTION_IDENTIFIER_NOT_EXIST = Execution(
     name="invalid_execution",
@@ -48,13 +55,16 @@ POST_INVALID_EXECUTION_IDENTIFIER_NOT_EXIST = Execution(
         "first": "value"
     })
 
-POST_INVALID_IDENTIFIER_SET = Execution(
-    name="invalid_execution",
-    pipeline_identifier="pipeline1",
-    identifier="an_identifier",
-    input_values={
-        "first": "value"
-    })
+
+def post_invalid_identifier_set(pipeline_identifier: str):
+    return Execution(
+        name="invalid_execution",
+        pipeline_identifier=pipeline_identifier,
+        identifier="an_invalid_identifier",
+        input_values={
+            "first": "value"
+        })
+
 
 POST_INVALID_MODEL = {"name": "invalid_execution"}
 

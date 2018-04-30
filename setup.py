@@ -6,7 +6,8 @@ DEPS = [
     "flask-restful>=0.3.6,<1.0", "flask-sqlalchemy>-2.3.2,<3.0",
     "psycopg2-binary>=2.7.4,<3.0", "marshmallow>=2.15.0,<3.0",
     "marshmallow_enum>=1.4.1,<2.0", "boutiques>=0.5.6,<1.0",
-    "blinker>=1.4,<2.0", "typing>=3.6.4,<4.0", "scandir>=1.7,<2.0"
+    "blinker>=1.4,<2.0", "typing>=3.6.4,<4.0", "scandir>=1.7,<2.0",
+    "psutil>=5.4.5,<6.0"
 ]
 
 setup(

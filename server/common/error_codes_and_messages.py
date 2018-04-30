@@ -77,7 +77,28 @@ INVALID_QUERY_PARAMETER = ErrorCodeAndMessage(
     120, "Invalid value '{}' for query parameter '{}'.")
 CANNOT_MODIFY_PARAMETER = ErrorCodeAndMessage(
     125, "'{}' cannot be modified on an existing Execution.")
-INVALID_INVOCATION = ErrorCodeAndMessage(130, "Invalid invocation")
+INVOCATION_INITIALIZATION_FAILED = ErrorCodeAndMessage(
+    130,
+    "The execution was created with identifier '{}', but its initialization failed during the invocation validation."
+)
 CANNOT_REPLAY_EXECUTION = ErrorCodeAndMessage(
     135, "An execution cannot be replayed. Current status: '{}'")
+INVALID_EXECUTION_TIMEOUT = ErrorCodeAndMessage(
+    140, "Invalid execution timeout. Must be between {} and {} seconds.")
+CANNOT_KILL_NOT_RUNNING_EXECUTION = ErrorCodeAndMessage(
+    145, "Cannot kill a non running execution. Current status: '{}'")
+CANNOT_KILL_FINISHING_EXECUTION = ErrorCodeAndMessage(
+    150,
+    "The execution processes are not running, thus the execution is most probably finishing and cannot be killed."
+)
+CANNOT_GET_RESULT_NOT_COMPLETED_EXECUTION = ErrorCodeAndMessage(
+    155,
+    "The execution is not done yet, thus results cannot be queried. Current status: '{}'. Please try again later."
+)
+CORRUPTED_EXECUTION = ErrorCodeAndMessage(
+    160,
+    "There is an unrecoverable problem with this execution. Please create a new execution."
+)
+UNSUPPORTED_DESCRIPTOR_TYPE = ErrorCodeAndMessage(
+    165, "The descriptor type '{}' is not supported.")
 PAGE_NOT_FOUND = ErrorCodeAndMessage(404, "Page Not Found")

@@ -45,12 +45,6 @@ def test_missing_required_parameter(config_data):
         properties_validation(config_data)
 
 
-def test_invalid_protocol(config_data):
-    config_data['supportedTransferProtocols'].append("invalidProtocol")
-    with pytest.raises(ValueError):
-        properties_validation(config_data)
-
-
 def test_max_authorized_execution_timeout_greater_than_min(config_data):
     config_data['minAuthorizedExecutionTimeout'] = 1024
     config_data['maxAuthorizedExecutionTimeout'] = 64

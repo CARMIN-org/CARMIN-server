@@ -5,9 +5,10 @@ from server.database import db as _db
 from server.config import TestConfig
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture(autouse=True, scope='session')
 def app():
-    app = create_app(TestConfig)
+    from server import app
+    app.config.from_object(TestConfig)
     declare_api(app)
     ctx = app.app_context()
     ctx.push()

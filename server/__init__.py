@@ -4,6 +4,7 @@ from server.api import declare_api
 app = create_app()
 
 from server.logging.setup import log_response, log_exception
+from server.resources.post_processors import *
 
 
 def main():

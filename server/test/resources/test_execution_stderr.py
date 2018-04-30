@@ -51,36 +51,36 @@ def execution_id(test_client, pipeline) -> str:
 
 
 @pytest.fixture
-def write_std_out(execution_id) -> str:
+def write_std_err(execution_id) -> str:
     carmin_dir = get_execution_carmin_files_dir(standard_user().username,
                                                 execution_id)
-    simple_stdout_text = "This is stdout content"
-    with open(os.path.join(carmin_dir, "stdout.txt"), "w") as f:
+    simple_stdout_text = "This is stderr content"
+    with open(os.path.join(carmin_dir, "stderr.txt"), "w") as f:
         f.write(simple_stdout_text)
 
     return simple_stdout_text
 
 
-class TestExecutionStdOutResource():
-    def test_get_execution_std_out_by_identifier(self, test_client,
-                                                 execution_id, write_std_out):
+class TestExecutionStdErrResource():
+    def test_get_execution_std_err_by_identifier(self, test_client,
+                                                 execution_id, write_std_err):
         response = test_client.get(
-            '/executions/{}/stdout'.format(execution_id),
+            '/executions/{}/stderr'.format(execution_id),
             headers={"apiKey": standard_user().api_key})
-        assert response.data.decode('utf8') == write_std_out
+        assert response.data.decode('utf8') == write_std_err
 
-    def test_get_execution_std_out_not_found(self, test_client, execution_id):
+    def test_get_execution_std_err_not_found(self, test_client, execution_id):
         response = test_client.get(
-            '/executions/{}/stdout'.format(execution_id),
+            '/executions/{}/stderr'.format(execution_id),
             headers={"apiKey": standard_user().api_key})
         error = error_from_response(response)
         assert error == PATH_DOES_NOT_EXIST
 
-    def test_get_execution_std_out_invalid_execution_id(
-            self, test_client, execution_id, write_std_out):
+    def test_get_execution_std_err_invalid_execution_id(
+            self, test_client, execution_id, write_std_err):
         invalid_execution_id = "NOT_{}".format(execution_id)
         response = test_client.get(
-            '/executions/{}/stdout'.format(invalid_execution_id),
+            '/executions/{}/stderr'.format(invalid_execution_id),
             headers={"apiKey": standard_user().api_key})
         error = error_from_response(response)
         expected_error_code_and_message = ErrorCodeAndMessageFormatter(

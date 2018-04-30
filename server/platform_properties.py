@@ -16,7 +16,7 @@ PLATFORM_PROPERTIES = {
     "platformDescription":
     "A lightweight implementation of the CARMIN 0.3 API Specification",
     "minAuthorizedExecutionTimeout":
-    128,
+    2,
     "maxAuthorizedExecutionTimeout":
     0,
     "defaultExecutionTimeout":

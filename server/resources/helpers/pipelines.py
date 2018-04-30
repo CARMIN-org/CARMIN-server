@@ -4,8 +4,11 @@ try:
 except ImportError:
     from scandir import scandir, walk
 import json
+import logging
 from boutiques import bosh
 from server import app
+from server.resources.models.descriptor.descriptor_abstract import Descriptor
+from server.resources.models.descriptor.supported_descriptors import SUPPORTED_DESCRIPTORS
 from server.resources.models.pipeline import Pipeline, PipelineSchema
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageAdditionalDetails, ErrorCodeAndMessageFormatter,
@@ -23,8 +26,9 @@ def pipelines(pipeline_identifier: str = None,
         if study_identifier:
             dirs[:] = [i for i in dirs if i == study_identifier]
 
-        # We exclude the boutiques folder as it includes the boutiques original descriptors
-        dirs[:] = [i for i in dirs if i != "boutiques"]
+        # We exclude the descriptor folders as they include the
+        # original, non-converted descriptors
+        dirs[:] = [i for i in dirs if i not in SUPPORTED_DESCRIPTORS.keys()]
 
         for file in files:
             real_path = os.path.realpath(os.path.join(subdir, file))
@@ -69,39 +73,43 @@ def get_pipeline(pipeline_identifier: str,
 
     for pipeline in all_pipelines:
         with open(pipeline.path) as f:
-            pipeline_json = json.load(f)
-            if pipeline_json["identifier"] == pipeline_identifier:
-                return pipeline if only_path else PipelineSchema().load(
-                    pipeline_json).data
+            try:
+                pipeline_json = json.load(f)
+                if pipeline_json["identifier"] == pipeline_identifier:
+                    return pipeline if only_path else PipelineSchema().load(
+                        pipeline_json).data
+            except json.JSONDecodeError:
+                # We log the invalid pipeline, but just continue instead of crashing
+                logger = logging.getLogger('server-error')
+                logger.error("Invalid pipeline at {}".format(pipeline.path))
+
     return None
 
 
-def export_boutiques_pipelines() -> (bool, str):
-    all_pipelines = get_all_pipelines("boutiques")
+def export_all_pipelines() -> (bool, str):
+    for descriptor_type in SUPPORTED_DESCRIPTORS:
+        all_pipelines = get_all_pipelines(descriptor_type)
 
-    for pipeline in all_pipelines:
-        carmin_pipeline = os.path.join(app.config['PIPELINE_DIRECTORY'],
-                                       "boutiques_{}".format(pipeline.name))
+        for pipeline in all_pipelines:
+            carmin_pipeline = os.path.join(app.config['PIPELINE_DIRECTORY'],
+                                           "{}_{}".format(
+                                               descriptor_type, pipeline.name))
 
-        try:
-            bosh(["export", "carmin", pipeline.path, carmin_pipeline])
-        except Exception:
-            return False, "Boutiques descriptor at '{}' is invalid and could not be translated. Please fix it before launching the server.".format(
-                pipeline.path)
-
-        if not os.path.exists(carmin_pipeline):
-            return False, "Boutiques descriptor at '{}' was exported without error, but no output file was created."
-
+            descriptor = Descriptor.descriptor_factory_from_type(
+                descriptor_type)
+            export, error = descriptor.export(pipeline.path, carmin_pipeline)
+            if error:
+                return False, error
     return True, None
 
 
-def get_original_descriptor_path(
-        pipeline_identifier: str) -> (str, ErrorCodeAndMessage):
+def get_original_descriptor_path_and_type(
+        pipeline_identifier: str) -> ((str, str), ErrorCodeAndMessage):
 
     carmin_descriptor_path = get_pipeline(pipeline_identifier, True)
 
     if not carmin_descriptor_path:
-        return None, INVALID_PIPELINE_IDENTIFIER
+        return (None, None), INVALID_PIPELINE_IDENTIFIER
 
     descriptor_type = carmin_descriptor_path.name[:carmin_descriptor_path.name.
                                                   index("_")]
@@ -110,7 +118,7 @@ def get_original_descriptor_path(
     original_descriptor_path = os.path.join(app.config['PIPELINE_DIRECTORY'],
                                             descriptor_type,
                                             original_descriptor_filename)
-    return original_descriptor_path, None
+    return (original_descriptor_path, descriptor_type), None
 
 
 def get_descriptor_json(pipeline_path: str) -> (any, ErrorCodeAndMessage):
