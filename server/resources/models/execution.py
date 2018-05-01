@@ -15,6 +15,12 @@ class ExecutionStatus(enum.Enum):
     Killed = "Killed"
 
 
+EXECUTION_COMPLETED_STATUSES = [
+    ExecutionStatus.Finished, ExecutionStatus.ExecutionFailed,
+    ExecutionStatus.Unknown, ExecutionStatus.Killed
+]
+
+
 class ExecutionSchema(Schema):
     SKIP_VALUES = list([None])
 

@@ -131,6 +131,10 @@ def upload_archive(upload_data: UploadData,
         with zipfile.ZipFile(file_name, mode='r') as zf:
             zf.extractall(path=requested_dir_path)
     except zipfile.BadZipFile as e:
+        try:
+            os.remove(file_name)
+        except:
+            pass
         return None, ErrorCodeAndMessageFormatter(NOT_AN_ARCHIVE, e)
     os.remove(file_name)
     path = Path.object_from_pathname(requested_dir_path)

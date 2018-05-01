@@ -28,7 +28,7 @@ def data_tester(tmpdir_factory):
 
 
 @pytest.fixture(autouse=True)
-def user_creater(session):
+def user_creator(session):
     session.add(standard_user(encrypted=True))
     session.commit()
 
@@ -38,9 +38,7 @@ class TestPipelineBoutiquesDescriptorResource():
             self, test_client):
         response = test_client.get(
             '/pipelines/{}/boutiquesdescriptor'.format(PipelineOne.identifier),
-            headers={
-                "apiKey": standard_user().api_key
-            })
+            headers={"apiKey": standard_user().api_key})
         pipeline = load_json_data(response)
         original_pipeline = json.loads(
             PipelineSchema().dumps(PipelineOne).data)
@@ -52,8 +50,6 @@ class TestPipelineBoutiquesDescriptorResource():
         response = test_client.get(
             '/pipelines/{}/boutiquesdescriptor'.format("INVALID_{}".format(
                 PipelineOne.identifier)),
-            headers={
-                "apiKey": standard_user().api_key
-            })
+            headers={"apiKey": standard_user().api_key})
         error = error_from_response(response)
         assert error == INVALID_PIPELINE_IDENTIFIER

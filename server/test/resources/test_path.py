@@ -245,14 +245,16 @@ class TestPathResource():
     def test_put_with_invalid_upload_type(self, test_client):
         response = test_client.put(
             '/path/{}/new_file.txt'.format(standard_user().username),
-            headers={"apiKey": standard_user().api_key},
+            headers={
+                "apiKey": standard_user().api_key,
+                "Content-Type": "application/carmin+json"
+            },
             data='{"type": "Invented", "base64Content": "ewlfkjweflk=="}')
         error = error_from_response(response)
         assert error.error_code == INVALID_MODEL_PROVIDED.error_code
         assert error.error_message == INVALID_MODEL_PROVIDED.error_message
         assert len(error.error_detail) == 1
         assert "type" in error.error_detail
-
 
     def test_put_where_parent_dir_not_exist(self, test_client):
         response = test_client.put(
@@ -288,7 +290,10 @@ class TestPathResource():
         file_name = '{}/put_file.txt'.format(standard_user().username)
         response = test_client.put(
             '/path/{}'.format(file_name),
-            headers={"apiKey": standard_user().api_key},
+            headers={
+                "apiKey": standard_user().api_key,
+                "Content-Type": "application/carmin+json"
+            },
             data=json.dumps(UploadDataSchema().dump(put_file).data))
         assert os.path.exists(
             os.path.join(app.config['DATA_DIRECTORY'], file_name))
@@ -298,7 +303,10 @@ class TestPathResource():
         abs_path = os.path.join(app.config['DATA_DIRECTORY'], path)
         response = test_client.put(
             '/path/{}'.format(path),
-            headers={"apiKey": standard_user().api_key},
+            headers={
+                "apiKey": standard_user().api_key,
+                "Content-Type": "application/carmin+json"
+            },
             data=json.dumps(UploadDataSchema().dump(put_dir).data))
         assert response.status_code == 201 and os.listdir(abs_path)
 
@@ -309,7 +317,10 @@ class TestPathResource():
             base64_content='bad_content', upload_type='Archive', md5='')
         response = test_client.put(
             '/path/{}'.format(path),
-            headers={"apiKey": standard_user().api_key},
+            headers={
+                "apiKey": standard_user().api_key,
+                "Content-Type": "application/carmin+json"
+            },
             data=json.dumps(UploadDataSchema().dump(put_dir).data))
         assert response.status_code == 400
 
@@ -319,11 +330,27 @@ class TestPathResource():
             base64_content='bad_content', upload_type='File', md5='')
         response = test_client.put(
             '/path/{}'.format(path),
-            headers={"apiKey": standard_user().api_key},
+            headers={
+                "apiKey": standard_user().api_key,
+                "Content-Type": "application/carmin+json"
+            },
             data=json.dumps(UploadDataSchema().dump(put_dir).data))
         error = error_from_response(response)
         assert error.error_message == "Invalid path: '{}' is a directory.".format(
             path)
+
+    def test_put_file_raw(self, test_client):
+        path = '{}/test_file_raw.txt'.format(standard_user().username)
+        file_content = "This is a test raw file"
+        response = test_client.put(
+            '/path/{}'.format(path),
+            headers={"apiKey": standard_user().api_key},
+            data=file_content)
+        assert response.status_code == 201
+
+        file_path = os.path.join(app.config['DATA_DIRECTORY'], path)
+        with open(file_path) as f:
+            assert f.read() == file_content
 
     # tests for DELETE
     def test_delete_single_file(self, test_client):

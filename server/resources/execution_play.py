@@ -1,5 +1,5 @@
+import os
 from flask_restful import Resource, request
-from boutiques import bosh
 from jsonschema import ValidationError
 from server.database import db
 from server.database.queries.executions import get_execution
@@ -7,12 +7,12 @@ from server.resources.decorators import login_required, marshal_response
 from server.database.models.execution import Execution, ExecutionStatus
 from server.common.error_codes_and_messages import (
     ErrorCodeAndMessageFormatter, ErrorCodeAndMessageAdditionalDetails,
-    EXECUTION_NOT_FOUND, UNAUTHORIZED, UNEXPECTED_ERROR, INVALID_INVOCATION,
-    CANNOT_REPLAY_EXECUTION)
+    EXECUTION_NOT_FOUND, UNAUTHORIZED, CORRUPTED_EXECUTION, UNEXPECTED_ERROR,
+    CANNOT_REPLAY_EXECUTION, UNSUPPORTED_DESCRIPTOR_TYPE)
 from server.resources.helpers.executions import (
-    get_execution_as_model, get_execution_dir, create_absolute_path_inputs)
-from server.resources.helpers.execution import start_execution
-from server.resources.helpers.pipelines import get_original_descriptor_path
+    get_execution_as_model, get_descriptor_path, get_absolute_path_inputs_path)
+from server.resources.helpers.execution_play import start_execution
+from server.resources.models.descriptor.descriptor_abstract import Descriptor
 
 
 class ExecutionPlay(Resource):
@@ -28,40 +28,36 @@ class ExecutionPlay(Resource):
 
         if execution_db.status != ExecutionStatus.Initializing:
             return ErrorCodeAndMessageFormatter(CANNOT_REPLAY_EXECUTION,
-                                                execution_db.status)
+                                                execution_db.status.name)
 
         execution, error = get_execution_as_model(user.username, execution_db)
         if error:
+            return CORRUPTED_EXECUTION
+
+        # Get the descriptor path
+        descriptor_path = get_descriptor_path(user.username,
+                                              execution.identifier)
+
+        # Get appriopriate descriptor object
+        descriptor = Descriptor.descriptor_factory_from_type(
+            execution_db.descriptor)
+
+        if not descriptor:
+            # We don't have any descriptor defined for this pipeline type
+            logger = logging.getLogger('server-error')
+            logger.error(
+                "Unsupported descriptor type extracted from file at {}".format(
+                    descriptor_path))
+            return ErrorCodeAndMessageFormatter(UNSUPPORTED_DESCRIPTOR_TYPE,
+                                                execution_db.descriptor)
+
+        modified_inputs_path = get_absolute_path_inputs_path(
+            user.username, execution.identifier)
+        if not os.path.isfile(modified_inputs_path):
+            logger = logging.getLogger('server-error')
+            logger.error("Absolute path inputs file not found at {}".format(
+                descriptor_path))
             return UNEXPECTED_ERROR
-
-        # Get the boutiques descriptor path
-        boutiques_descriptor_path, error = get_original_descriptor_path(
-            execution.pipeline_identifier)
-        if error:
-            return error
-
-        # Create a version of the inputs file with correct links
-        modified_inputs_path, error = create_absolute_path_inputs(
-            user.username, execution.identifier, execution.pipeline_identifier,
-            request.url_root)
-
-        if error:
-            return UNEXPECTED_ERROR
-
-        # We are ready to start the execution
-        # First, let's validate it using invocation
-        try:
-            bosh([
-                "invocation", boutiques_descriptor_path, "-i",
-                modified_inputs_path
-            ])
-        except ValidationError as e:
-            execution_db.status = ExecutionStatus.InitializationFailed
-            db.session.commit()
-            return ErrorCodeAndMessageAdditionalDetails(
-                INVALID_INVOCATION, e.message)
 
         # The execution is valid and we are now ready to start it
-        start_execution(user, execution, boutiques_descriptor_path,
-                        modified_inputs_path)
-        pass
+        start_execution(user, execution, descriptor, modified_inputs_path)

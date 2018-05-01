@@ -1,12 +1,6 @@
 import os
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-SUPPORTED_PROTOCOLS = ["http", "https", "ftp", "sftp", "ftps", "scp", "webdav"]
-
-SUPPORTED_MODULES = [
-    "Processing", "Data", "AdvancedData", "Management", "Commercial"
-]
-
 DEFAULT_PROD_DB_URI = os.path.join(basedir, 'database/app.db')
 SQLITE_DEFAULT_PROD_DB_URI = 'sqlite:///{}'.format(DEFAULT_PROD_DB_URI)
 

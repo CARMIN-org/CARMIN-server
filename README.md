@@ -161,12 +161,8 @@ Let's add some data to the server with the `PUT /path/{completePath}` method:
 ```bash
 curl -X "PUT" "http://localhost:8080/path/admin/new_user.txt" \
      -H 'apiKey: [secret-api-key]' \
-     -d $'{
-  "type": "File",
-  "base64Content": "bmV3IENBUk1JTiB1c2VyCg=="
-}'
+     -d "Jane Doe"
 ```
-
 The server should reply with a `201: Created` code, indicating that the resource was successfully
 uploaded to the server.
 
@@ -186,7 +182,7 @@ The server should return a `Path` object, which describes the resource that we u
   "platformPath": "http://localhost:8080/path/admin/new_user.txt",
   "lastModificationDate": 1521740108,
   "isDirectory": false,
-  "size": 12,
+  "size": 8,
   "mimeType": "text/plain"
 }
 ```

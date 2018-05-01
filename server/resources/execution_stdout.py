@@ -1,6 +1,10 @@
 from flask_restful import Resource
+from server.resources.helpers.std import std_file_resource
+from server.resources.helpers.executions import STDOUT_FILENAME
+from server.resources.decorators import login_required
 
 
 class ExecutionStdOut(Resource):
-    def get(self, execution_identifier):
-        pass
+    @login_required
+    def get(self, user, execution_identifier):
+        return std_file_resource(user, execution_identifier, STDOUT_FILENAME)

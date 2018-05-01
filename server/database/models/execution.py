@@ -21,6 +21,7 @@ class Execution(db.Model):
         identifier (str):
         name (str):
         pipeline_identifier (str):
+        descriptor (str):
         timeout (int):
         status (ExecutionStatus):
         study_identifier (str):
@@ -33,6 +34,7 @@ class Execution(db.Model):
         identifier (str):
         name (str):
         pipeline_identifier (str):
+        descriptor (str):
         timeout (int):
         status (ExecutionStatus):
         study_identifier (str):
@@ -45,6 +47,7 @@ class Execution(db.Model):
     identifier = Column(String, primary_key=True, default=execution_uuid)
     name = Column(String, nullable=False)
     pipeline_identifier = Column(String, nullable=False)
+    descriptor = Column(String, nullable=False)
     timeout = Column(Integer)
     status = Column(Enum(ExecutionStatus), nullable=False)
     study_identifier = Column(String)

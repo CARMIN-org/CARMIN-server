@@ -1,4 +1,9 @@
+sudo: required
+
 language: python
+
+services:
+    - docker
 
 python:
 - 3.4
